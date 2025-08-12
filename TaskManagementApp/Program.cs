@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using TaskManagementApp.Models;
 using Serilog;
+using TaskManagementApp.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,7 +89,7 @@ builder.Services
                 {
                     context.Token = accessToken;
                 }
-                return Task.CompletedTask;
+                return System.Threading.Tasks.Task.CompletedTask;
             }
         };
     });
@@ -99,10 +100,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 
 // Custom services
-builder.Services.AddScoped<Services.ITokenService>(sp =>
-    new Services.TokenService(jwtIssuer, jwtAudience, signingKey));
-builder.Services.AddScoped<Services.IPasswordHasher, Services.BCryptPasswordHasher>();
-builder.Services.AddScoped<Services.IEmailService, Services.SmtpEmailService>();
+builder.Services.AddScoped<TaskManagementApp.Services.ITokenService>(sp =>
+    new TaskManagementApp.Services.TokenService(jwtIssuer, jwtAudience, signingKey));
+builder.Services.AddScoped<TaskManagementApp.Services.IPasswordHasher, TaskManagementApp.Services.BCryptPasswordHasher>();
+builder.Services.AddScoped<TaskManagementApp.Services.IEmailService, TaskManagementApp.Services.SmtpEmailService>();
 
 var app = builder.Build();
 
@@ -124,7 +125,7 @@ app.UseGlobalErrorHandler();
 app.MapControllers();
 
 // SignalR hubs
-app.MapHub<RealTime.TaskHub>("/hubs/tasks");
+app.MapHub<TaskManagementApp.RealTime.TaskHub>("/hubs/tasks");
 
 app.Run();
 

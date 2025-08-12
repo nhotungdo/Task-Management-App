@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "f:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj": {}
+    "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj": {}
   },
   "projects": {
-    "f:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj": {
+    "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "f:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
+        "projectUniqueName": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
         "projectName": "TaskManagementApp",
-        "projectPath": "f:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
+        "projectPath": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
         "packagesPath": "C:\\Users\\MY PC\\.nuget\\packages\\",
-        "outputPath": "f:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\obj\\",
+        "outputPath": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -58,9 +58,9 @@
               "target": "Package",
               "version": "[8.0.8, )"
             },
-            "Microsoft.AspNetCore.SignalR.Core": {
+            "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.8, )"
+              "version": "[9.0.8, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
@@ -78,13 +78,17 @@
               "target": "Package",
               "version": "[9.0.8, )"
             },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "Serilog.AspNetCore": {
               "target": "Package",
               "version": "[8.0.1, )"
-            },
-            "Serilog.Sinks.Console": {
-              "target": "Package",
-              "version": "[5.0.1, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

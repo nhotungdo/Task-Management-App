@@ -1,0 +1,404 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\services\\adminseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\services\\adminseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\realtime\\taskhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\realtime\\taskhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\services\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\services\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\taskmanagementapp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\taskmanagementapp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\passwordcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\passwordcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\taskmanagementapp.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\taskmanagementapp.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\models\\activitylog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\models\\activitylog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\notificationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\notificationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\models\\passwordresettoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\models\\passwordresettoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\taskassignmentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\taskassignmentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\errorhandlingextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\errorhandlingextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|f:\\prn212-review\\taskmanagementapp\\task-management-app\\taskmanagementapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{994947CB-70D3-4F0F-854F-2679DA7CF88F}|TaskManagementApp\\TaskManagementApp.csproj|solutionrelative:taskmanagementapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 222,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 16,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:6:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:5:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:14:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:15:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:13:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Properties\\launchSettings.json",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Properties\\launchSettings.json",
+              "RelativeToolTip": "TaskManagementApp\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-12T02:51:50.72Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "EmailService.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\EmailService.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Services\\EmailService.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\EmailService.cs",
+              "RelativeToolTip": "TaskManagementApp\\Services\\EmailService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:17:19.812Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TokenService.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\TokenService.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Services\\TokenService.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\TokenService.cs",
+              "RelativeToolTip": "TaskManagementApp\\Services\\TokenService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-11T16:34:34.707Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "WeatherForecastController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\WeatherForecastController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\WeatherForecastController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\WeatherForecastController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\WeatherForecastController.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAwA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:31.596Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Program.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Program.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Program.cs",
+              "RelativeToolTip": "TaskManagementApp\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:32:53.895Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TaskHub.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\RealTime\\TaskHub.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\RealTime\\TaskHub.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\RealTime\\TaskHub.cs",
+              "RelativeToolTip": "TaskManagementApp\\RealTime\\TaskHub.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:17:53.73Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AdminSeeder.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\AdminSeeder.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Services\\AdminSeeder.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\AdminSeeder.cs",
+              "RelativeToolTip": "TaskManagementApp\\Services\\AdminSeeder.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:38.353Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PasswordHasher.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\PasswordHasher.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Services\\PasswordHasher.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Services\\PasswordHasher.cs",
+              "RelativeToolTip": "TaskManagementApp\\Services\\PasswordHasher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-11T16:34:33.322Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:32:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "WeatherForecast.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\WeatherForecast.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\WeatherForecast.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\WeatherForecast.cs",
+              "RelativeToolTip": "TaskManagementApp\\WeatherForecast.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:41:00.343Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "PasswordResetToken.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Models\\PasswordResetToken.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Models\\PasswordResetToken.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Models\\PasswordResetToken.cs",
+              "RelativeToolTip": "TaskManagementApp\\Models\\PasswordResetToken.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:17:59.134Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ActivityLog.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Models\\ActivityLog.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Models\\ActivityLog.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Models\\ActivityLog.cs",
+              "RelativeToolTip": "TaskManagementApp\\Models\\ActivityLog.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAA1wAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:32.746Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\UsersController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:28.634Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "TaskAssignmentsController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\TaskAssignmentsController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\TaskAssignmentsController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\TaskAssignmentsController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\TaskAssignmentsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:27.947Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "PasswordController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\PasswordController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\PasswordController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\PasswordController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\PasswordController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:27.211Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "NotificationsController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\NotificationsController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\NotificationsController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\NotificationsController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\NotificationsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:26.46Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "ErrorHandlingExtensions.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\ErrorHandlingExtensions.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\ErrorHandlingExtensions.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\ErrorHandlingExtensions.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\ErrorHandlingExtensions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:25.64Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "TaskManagementApp\\Controllers\\AuthController.cs",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "TaskManagementApp\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-12T02:28:24.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "TaskManagementApp",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
+              "RelativeDocumentMoniker": "TaskManagementApp\\TaskManagementApp.csproj",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
+              "RelativeToolTip": "TaskManagementApp\\TaskManagementApp.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-08-12T02:23:01.13Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "TaskManagementApp.http",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.http",
+              "RelativeDocumentMoniker": "TaskManagementApp\\TaskManagementApp.http",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.http",
+              "RelativeToolTip": "TaskManagementApp\\TaskManagementApp.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2025-08-12T02:17:49.779Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\appsettings.json",
+              "RelativeDocumentMoniker": "TaskManagementApp\\appsettings.json",
+              "ToolTip": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\appsettings.json",
+              "RelativeToolTip": "TaskManagementApp\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-11T16:25:44.731Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ namespace TaskManagementApp.Services;
 
 public static class AdminSeeder
 {
-    public static async Task SeedAsync(IServiceProvider services)
+    public static async System.Threading.Tasks.Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TaskManagementAppContext>();
