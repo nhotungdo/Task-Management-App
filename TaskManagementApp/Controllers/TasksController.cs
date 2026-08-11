@@ -1,10 +1,12 @@
+using TaskManagementApp.Infrastructure.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
 
 namespace TaskManagementApp.Controllers;
 
@@ -25,7 +27,7 @@ public class TasksController : ControllerBase
     public record TaskCreateDto(string Title, string? Description, DateTime? DueDate, string Priority, string Status);
     public record TaskUpdateDto(string? Title, string? Description, DateTime? DueDate, string? Priority, string? Status);
 
-    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? status, [FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
@@ -56,7 +58,7 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Create([FromBody] TaskCreateDto dto)
     {
         var userId = GetUserId();
-        var task = new Models.Task
+        var task = new TaskManagementApp.Domain.Entities.Task
         {
             TaskId = Guid.NewGuid(),
             Title = dto.Title,
@@ -103,5 +105,6 @@ public class TasksController : ControllerBase
         return NoContent();
     }
 }
+
 
 

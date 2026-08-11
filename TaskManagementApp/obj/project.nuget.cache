@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "jX5I6wcxffA=",
+  "dgSpecHash": "/oPKuNUFkp4=",
   "success": true,
-  "projectFilePath": "F:\\PRN212-REVIEW\\TaskManagementApp\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.csproj",
+  "projectFilePath": "F:\\OJT-Review\\Task-Management-App\\TaskManagementApp\\TaskManagementApp.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MY PC\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\MY PC\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

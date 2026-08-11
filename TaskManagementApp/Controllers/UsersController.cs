@@ -1,13 +1,15 @@
+﻿using TaskManagementApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
 
 namespace TaskManagementApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")] // Only admin can list all users
+[Authorize] // All users can list members
 public class UsersController : ControllerBase
 {
     private readonly TaskManagementAppContext _db;
@@ -31,5 +33,3 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 }
-
-

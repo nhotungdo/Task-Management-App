@@ -1,7 +1,9 @@
+using TaskManagementApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
 
 namespace TaskManagementApp.Controllers;
 
@@ -10,10 +12,10 @@ namespace TaskManagementApp.Controllers;
 public class PasswordController : ControllerBase
 {
     private readonly TaskManagementAppContext _db;
-    private readonly Services.IEmailService _email;
-    private readonly Services.IPasswordHasher _passwordHasher;
+    private readonly IEmailService _email;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public PasswordController(TaskManagementAppContext db, Services.IEmailService email, Services.IPasswordHasher passwordHasher)
+    public PasswordController(TaskManagementAppContext db, IEmailService email, IPasswordHasher passwordHasher)
     {
         _db = db;
         _email = email;
@@ -64,5 +66,6 @@ public class PasswordController : ControllerBase
         return Ok();
     }
 }
+
 
 

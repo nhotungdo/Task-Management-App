@@ -30,26 +30,22 @@ flowchart LR
 ## Cấu trúc thư mục
 ```
 Task-Management-App/
-├─ TaskManagementApp/
+├─ TaskManagementApp/       <-- Backend (ASP.NET Core API)
 │  ├─ Controllers/
-│  │  ├─ AuthController.cs
-│  │  ├─ TasksController.cs
-│  │  ├─ TaskAssignmentsController.cs
-│  │  ├─ UsersController.cs
-│  │  ├─ NotificationsController.cs
-│  │  └─ PasswordController.cs
 │  ├─ Models/
-│  │  ├─ User.cs, Task.cs, TaskAssignment.cs,
-│  │  ├─ Notification.cs, RefreshToken.cs, ActivityLog.cs,
-│  │  ├─ PasswordResetToken.cs,
-│  │  └─ TaskManagementAppContext.cs
-│  ├─ RealTime/TaskHub.cs
+│  ├─ RealTime/
 │  ├─ Services/
-│  │  ├─ TokenService.cs, PasswordHasher.cs,
-│  │  ├─ EmailService.cs, AdminSeeder.cs
 │  ├─ Program.cs
 │  ├─ appsettings.json
 │  └─ TaskManagementApp.csproj
+├─ frontend/                <-- Frontend (React + Vite)
+│  ├─ public/
+│  ├─ src/
+│  │  ├─ App.jsx
+│  │  ├─ main.jsx
+│  │  └─ index.css
+│  ├─ index.html
+│  └─ package.json
 └─ README.md
 ```
 
@@ -83,6 +79,8 @@ Chỉnh `Task-Management-App/TaskManagementApp/appsettings.json`:
 ```
 
 ### Cài đặt & chạy
+
+#### Chạy Backend (API)
 ```powershell
 cd Task-Management-App/TaskManagementApp
 dotnet restore
@@ -91,9 +89,16 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 dotnet run
 ```
-
 - Swagger (Dev): truy cập `/swagger` để thử API và thêm JWT qua nút Authorize.
 - Tài khoản admin mặc định sẽ được seed: `admin@example.com` / `Admin@123`
+
+#### Chạy Frontend (React)
+```powershell
+cd Task-Management-App/frontend
+npm install
+npm run dev
+```
+- Ứng dụng React sẽ chạy mặc định tại `http://localhost:5173`.
 
 ## API chính
 

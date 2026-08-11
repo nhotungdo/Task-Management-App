@@ -1,9 +1,11 @@
+﻿using TaskManagementApp.Infrastructure.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
 
 namespace TaskManagementApp.Controllers;
 
@@ -12,10 +14,10 @@ namespace TaskManagementApp.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly TaskManagementAppContext _db;
-    private readonly Services.IPasswordHasher _passwordHasher;
-    private readonly Services.ITokenService _tokenService;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly ITokenService _tokenService;
 
-    public AuthController(TaskManagementAppContext db, Services.IPasswordHasher passwordHasher, Services.ITokenService tokenService)
+    public AuthController(TaskManagementAppContext db, IPasswordHasher passwordHasher, ITokenService tokenService)
     {
         _db = db;
         _passwordHasher = passwordHasher;
@@ -75,7 +77,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Me()
     {
-        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(userId, out var guid)) return Unauthorized();
         var user = await _db.Users.Where(u => u.UserId == guid)
             .Select(u => new { u.UserId, u.Email, u.FullName, u.Role, u.CreatedAt, u.UpdatedAt })
@@ -84,5 +86,3 @@ public class AuthController : ControllerBase
         return Ok(user);
     }
 }
-
-

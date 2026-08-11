@@ -1,9 +1,11 @@
+using TaskManagementApp.Infrastructure.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
 
 namespace TaskManagementApp.Controllers;
 
@@ -44,5 +46,6 @@ public class NotificationsController : ControllerBase
         return Ok();
     }
 }
+
 
 

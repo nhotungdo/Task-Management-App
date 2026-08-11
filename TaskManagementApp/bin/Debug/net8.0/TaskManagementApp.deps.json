@@ -17,7 +17,10 @@
           "Microsoft.Extensions.Configuration": "8.0.0",
           "Microsoft.Extensions.Configuration.Json": "8.0.0",
           "Serilog.AspNetCore": "8.0.1",
-          "Swashbuckle.AspNetCore": "6.6.2"
+          "Swashbuckle.AspNetCore": "6.6.2",
+          "TaskManagementApp.Application": "1.0.0",
+          "TaskManagementApp.Domain": "1.0.0",
+          "TaskManagementApp.Infrastructure": "1.0.0"
         },
         "runtime": {
           "TaskManagementApp.dll": {}
@@ -1259,6 +1262,40 @@
             "fileVersion": "6.0.21.52210"
           }
         }
+      },
+      "TaskManagementApp.Application/1.0.0": {
+        "dependencies": {
+          "TaskManagementApp.Domain": "1.0.0"
+        },
+        "runtime": {
+          "TaskManagementApp.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "TaskManagementApp.Domain/1.0.0": {
+        "runtime": {
+          "TaskManagementApp.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "TaskManagementApp.Infrastructure/1.0.0": {
+        "dependencies": {
+          "BCrypt.Net-Next": "4.0.3",
+          "Microsoft.EntityFrameworkCore": "9.0.8",
+          "Microsoft.EntityFrameworkCore.SqlServer": "9.0.8",
+          "TaskManagementApp.Application": "1.0.0",
+          "TaskManagementApp.Domain": "1.0.0"
+        },
+        "runtime": {
+          "TaskManagementApp.Infrastructure.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -1967,6 +2004,21 @@
       "sha512": "sha512-IXoJOXIqc39AIe+CIR7koBtRGMiCt/LPM3lI+PELtDIy9XdyeSrwXFdWV9dzJ2Awl0paLWUaknLxFQ5HpHZUog==",
       "path": "system.windows.extensions/6.0.0",
       "hashPath": "system.windows.extensions.6.0.0.nupkg.sha512"
+    },
+    "TaskManagementApp.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "TaskManagementApp.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "TaskManagementApp.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

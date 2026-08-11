@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "TaskManagementApp.Application/1.0.0": {
+        "dependencies": {
+          "TaskManagementApp.Domain": "1.0.0"
+        },
+        "runtime": {
+          "TaskManagementApp.Application.dll": {}
+        }
+      },
+      "TaskManagementApp.Domain/1.0.0": {
+        "runtime": {
+          "TaskManagementApp.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "TaskManagementApp.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "TaskManagementApp.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

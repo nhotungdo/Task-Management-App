@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using TaskManagementApp.Models;
+using TaskManagementApp.Domain.Entities;
+using TaskManagementApp.Infrastructure.Data;
+using TaskManagementApp.Infrastructure.Services;
 using Serilog;
 using TaskManagementApp.Controllers;
 
@@ -100,10 +102,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 
 // Custom services
-builder.Services.AddScoped<TaskManagementApp.Services.ITokenService>(sp =>
-    new TaskManagementApp.Services.TokenService(jwtIssuer, jwtAudience, signingKey));
-builder.Services.AddScoped<TaskManagementApp.Services.IPasswordHasher, TaskManagementApp.Services.BCryptPasswordHasher>();
-builder.Services.AddScoped<TaskManagementApp.Services.IEmailService, TaskManagementApp.Services.SmtpEmailService>();
+builder.Services.AddScoped<ITokenService>(sp =>
+    new TokenService(jwtIssuer, jwtAudience, signingKey));
+builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 var app = builder.Build();
 
@@ -127,7 +129,11 @@ app.MapControllers();
 // SignalR hubs
 app.MapHub<TaskManagementApp.RealTime.TaskHub>("/hubs/tasks");
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
+
 app.Run();
 
 // Seed admin on startup (fire and forget)
-await TaskManagementApp.Services.AdminSeeder.SeedAsync(app.Services);
+await AdminSeeder.SeedAsync(app.Services);
+
+
