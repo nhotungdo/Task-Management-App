@@ -1,4 +1,5 @@
-﻿import React, { createContext, useState, useEffect, useContext } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext();
@@ -37,13 +38,10 @@ export const AuthProvider = ({ children }) => {
       // Call ASP.NET Core Login API
       const response = await api.post('/auth/login', { email, password });
       
-      const { token } = response.data;
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
       
-      // Fetch user profile immediately after login
-      const meResponse = await api.get('/auth/me');
-      
-      setUser(meResponse.data);
+      setUser(user);
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {

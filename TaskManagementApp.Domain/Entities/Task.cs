@@ -23,7 +23,11 @@ public partial class Task
 
     public DateTime? UpdatedAt { get; set; }
 
+    public Guid? WorkspaceId { get; set; } // Nullable initially for migration
+
     public virtual User Owner { get; set; } = null!;
+
+    public virtual Workspace? Workspace { get; set; }
 
     public virtual ICollection<TaskAssignment> TaskAssignments { get; set; } = new List<TaskAssignment>();
 }

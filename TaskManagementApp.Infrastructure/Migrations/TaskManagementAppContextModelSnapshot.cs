@@ -53,6 +53,42 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.ToTable("ActivityLogs");
                 });
 
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ReceiverId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SentAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("ChatMessages");
+                });
+
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -189,10 +225,15 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TaskId")
                         .HasName("PK__Tasks__7C6949B1BD70F0F7");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Tasks");
                 });
@@ -270,6 +311,70 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.Workspace", b =>
+                {
+                    b.Property<Guid>("WorkspaceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("WorkspaceId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Workspaces");
+                });
+
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.WorkspaceMember", b =>
+                {
+                    b.Property<Guid>("WorkspaceMemberId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("(newid())");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Member");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("WorkspaceMemberId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("WorkspaceMembers");
+                });
+
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.ActivityLog", b =>
                 {
                     b.HasOne("TaskManagementApp.Domain.Entities.User", "User")
@@ -279,6 +384,31 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasConstraintName("FK_ActivityLogs_Users");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("TaskManagementApp.Domain.Entities.User", "Receiver")
+                        .WithMany("ReceivedMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TaskManagementApp.Domain.Entities.User", "Sender")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TaskManagementApp.Domain.Entities.Workspace", "Workspace")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.Notification", b =>
@@ -322,7 +452,14 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Tasks_Users");
 
+                    b.HasOne("TaskManagementApp.Domain.Entities.Workspace", "Workspace")
+                        .WithMany("Tasks")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("Owner");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.TaskAssignment", b =>
@@ -344,6 +481,36 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.Workspace", b =>
+                {
+                    b.HasOne("TaskManagementApp.Domain.Entities.User", "Owner")
+                        .WithMany("Workspaces")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.WorkspaceMember", b =>
+                {
+                    b.HasOne("TaskManagementApp.Domain.Entities.User", "User")
+                        .WithMany("WorkspaceMembers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TaskManagementApp.Domain.Entities.Workspace", "Workspace")
+                        .WithMany("WorkspaceMembers")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workspace");
+                });
+
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.Task", b =>
                 {
                     b.Navigation("TaskAssignments");
@@ -353,13 +520,30 @@ namespace TaskManagementApp.Infrastructure.Migrations
                 {
                     b.Navigation("ActivityLogs");
 
+                    b.Navigation("ChatMessages");
+
                     b.Navigation("Notifications");
+
+                    b.Navigation("ReceivedMessages");
 
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("TaskAssignments");
 
                     b.Navigation("Tasks");
+
+                    b.Navigation("WorkspaceMembers");
+
+                    b.Navigation("Workspaces");
+                });
+
+            modelBuilder.Entity("TaskManagementApp.Domain.Entities.Workspace", b =>
+                {
+                    b.Navigation("ChatMessages");
+
+                    b.Navigation("Tasks");
+
+                    b.Navigation("WorkspaceMembers");
                 });
 #pragma warning restore 612, 618
         }

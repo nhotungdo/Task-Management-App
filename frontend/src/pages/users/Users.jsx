@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { toast } from 'react-hot-toast';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -26,7 +27,15 @@ const Users = () => {
           <h2>Quản lý Thành viên</h2>
           <div className="header-date">Danh sách những người tham gia dự án</div>
         </div>
-        <button className="add-task-btn">+ Mời thành viên</button>
+        <button 
+          className="add-task-btn" 
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.origin + '/register');
+            toast.success('Đã sao chép link đăng ký! Gửi cho đồng nghiệp ngay nhé.');
+          }}
+        >
+          + Mời thành viên
+        </button>
       </header>
 
       <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
@@ -35,17 +44,17 @@ const Users = () => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
             {users.map(user => (
-              <div key={user.id} className="user-card" style={cardStyle}>
+              <div key={user.userId} className="user-card" style={cardStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div style={{
                     width: '56px', height: '56px', borderRadius: '50%',
                     background: 'var(--accent)', color: 'white', display: 'flex',
                     alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold'
                   }}>
-                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    {user.fullName ? user.fullName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '18px' }}>{user.name}</div>
+                    <div style={{ fontWeight: 600, fontSize: '18px' }}>{user.fullName || 'Người dùng ẩn danh'}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{user.email}</div>
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
                       <span style={{ fontSize: '12px', background: 'rgba(0,0,0,0.05)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>{user.role}</span>

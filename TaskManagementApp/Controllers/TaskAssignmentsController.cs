@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TaskManagementApp.Domain.Entities;
 using TaskManagementApp.Infrastructure.Data;
+using System;
+using System.Threading.Tasks;
 
 namespace TaskManagementApp.Controllers;
 
@@ -24,16 +26,22 @@ public class TaskAssignmentsController : ControllerBase
         _taskHub = taskHub;
     }
 
-    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     public record AssignDto(Guid UserId);
 
     [HttpPost]
     public async Task<IActionResult> Assign(Guid taskId, [FromBody] AssignDto dto)
     {
-        var ownerId = GetUserId();
-        var task = await _db.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.OwnerId == ownerId);
+        var callerId = GetUserId();
+        var task = await _db.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
         if (task == null) return NotFound();
+        
+        var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == callerId);
+        if (!isMember) return Forbid();
+
+        var userToAssignIsMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == dto.UserId);
+        if (!userToAssignIsMember) return BadRequest("User is not a member of this workspace");
         var user = await _db.Users.FindAsync(dto.UserId);
         if (user == null) return BadRequest("User not found");
 
@@ -49,26 +57,25 @@ public class TaskAssignmentsController : ControllerBase
         };
         _db.TaskAssignments.Add(assignment);
         await _db.SaveChangesAsync();
-        await _taskHub.Clients.User(ownerId.ToString()).SendAsync("TaskAssigned", new { taskId, userId = dto.UserId });
-        await _taskHub.Clients.User(dto.UserId.ToString()).SendAsync("TaskAssigned", new { taskId, userId = dto.UserId });
+        await _taskHub.Clients.Group($"workspace:{task.WorkspaceId}").SendAsync("TaskAssigned", new { taskId, userId = dto.UserId });
         return Ok(assignment);
     }
 
     [HttpDelete("{userId:guid}")]
     public async Task<IActionResult> Unassign(Guid taskId, Guid userId)
     {
-        var ownerId = GetUserId();
-        var task = await _db.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.OwnerId == ownerId);
+        var callerId = GetUserId();
+        var task = await _db.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
         if (task == null) return NotFound();
+        
+        var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == callerId);
+        if (!isMember) return Forbid();
+
         var assignment = await _db.TaskAssignments.FirstOrDefaultAsync(a => a.TaskId == taskId && a.UserId == userId);
         if (assignment == null) return NotFound();
         _db.TaskAssignments.Remove(assignment);
         await _db.SaveChangesAsync();
-        await _taskHub.Clients.User(ownerId.ToString()).SendAsync("TaskUnassigned", new { taskId, userId });
-        await _taskHub.Clients.User(userId.ToString()).SendAsync("TaskUnassigned", new { taskId, userId });
+        await _taskHub.Clients.Group($"workspace:{task.WorkspaceId}").SendAsync("TaskUnassigned", new { taskId, userId });
         return NoContent();
     }
 }
-
-
-

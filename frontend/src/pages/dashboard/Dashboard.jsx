@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Plus, X } from 'lucide-react';
+import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { X, CheckCircle, Circle, UserPlus } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import api from '../../services/api';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const [tasks, setTasks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -15,10 +18,25 @@ const Dashboard = () => {
   const [priority, setPriority] = useState('Medium');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Assign Users state
+  const [users, setUsers] = useState([]);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/users');
+      setUsers(response.data || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
 
   const fetchTasks = async () => {
+    if (!activeWorkspace) return;
     try {
-      const response = await api.get('/tasks');
+      const response = await api.get(`/tasks?workspaceId=${activeWorkspace.workspaceId}`);
       setTasks(response.data.items || []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -26,8 +44,41 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchTasks();
+    fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (activeWorkspace) {
+      fetchTasks();
+    }
+  }, [activeWorkspace]);
+
+  const handleToggleStatus = async (task) => {
+    const newStatus = task.status === 'Done' ? 'To Do' : 'Done';
+    try {
+      await api.put(`/tasks/${task.id || task.taskId}`, { status: newStatus });
+      toast.success(`Đã đánh dấu task là ${newStatus}`);
+      fetchTasks();
+    } catch (err) {
+      toast.error('Lỗi khi cập nhật trạng thái');
+      console.error(err);
+    }
+  };
+
+  const handleAssignUser = async (userId) => {
+    try {
+      await api.post(`/tasks/${selectedTaskId}/assignments`, { userId });
+      toast.success('Đã mời thành viên thành công!');
+      setAssignModalOpen(false);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        toast.error('Thành viên này đã có trong task.');
+      } else {
+        toast.error('Lỗi khi mời thành viên.');
+      }
+      console.error(err);
+    }
+  };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
@@ -39,7 +90,8 @@ const Dashboard = () => {
         title,
         description,
         status,
-        priority
+        priority,
+        workspaceId: activeWorkspace.workspaceId
       });
       setIsModalOpen(false);
       // Reset form
@@ -61,7 +113,7 @@ const Dashboard = () => {
     <>
       <header className="header" style={{ padding: '24px 24px 0 24px' }}>
         <div>
-          <h2>Công việc hôm nay</h2>
+          <h2>{activeWorkspace ? activeWorkspace.name : 'Công việc hôm nay'}</h2>
           <div className="header-date">Xin chào {user?.name}, Chúc bạn một ngày làm việc hiệu quả!</div>
         </div>
         <button className="add-task-btn" onClick={() => setIsModalOpen(true)}>+ Thêm công việc mới</button>
@@ -69,9 +121,30 @@ const Dashboard = () => {
 
       <div className="task-container" style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', alignContent: 'flex-start' }}>
         {tasks.map(task => (
-          <div className={`task-card ${task.priority.toLowerCase()}-priority`} key={task.id}>
-            <div className="task-header">
-              <span className="task-title">{task.title}</span>
+          <div className={`task-card ${task.priority.toLowerCase()}-priority`} key={task.id || task.taskId}>
+            <div className="task-header" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <button 
+                onClick={() => handleToggleStatus(task)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: '2px' }}
+                title="Đánh dấu hoàn thành"
+              >
+                {task.status === 'Done' ? (
+                  <CheckCircle size={20} color="var(--primary)" />
+                ) : (
+                  <Circle size={20} color="var(--text-muted)" />
+                )}
+              </button>
+              <span className="task-title" style={{ flex: 1, textDecoration: task.status === 'Done' ? 'line-through' : 'none', color: task.status === 'Done' ? 'var(--text-muted)' : 'inherit' }}>
+                {task.title}
+              </span>
+              <button 
+                onClick={() => { setSelectedTaskId(task.id || task.taskId); setAssignModalOpen(true); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: '4px', borderRadius: '50%' }}
+                className="hover-bg-primary"
+                title="Mời thành viên"
+              >
+                <UserPlus size={18} />
+              </button>
             </div>
             <p className="task-desc">{task.description}</p>
             <div className="task-footer">
@@ -140,6 +213,39 @@ const Dashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Assign User Modal */}
+      {assignModalOpen && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle} className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px' }}>Mời thành viên</h3>
+              <button onClick={() => setAssignModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+              {users.map(u => (
+                <div key={u.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.5)' }}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{u.fullName || u.email}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{u.email}</div>
+                  </div>
+                  <button 
+                    onClick={() => handleAssignUser(u.userId)}
+                    style={{ padding: '6px 12px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                  >
+                    Mời
+                  </button>
+                </div>
+              ))}
+              {users.length === 0 && (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Không tìm thấy người dùng nào.</div>
+              )}
+            </div>
           </div>
         </div>
       )}
