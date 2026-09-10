@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
   Settings, 
   Home, 
@@ -26,26 +27,39 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (pathname !== "/login") {
+    if (pathname !== "/login" && pathname !== "/register") {
       const token = localStorage.getItem("token");
       if (!token) {
         router.push("/login");
+        setIsLoading(false);
       } else {
         // Fetch user info
         api.get("/Auth/me")
-          .then(res => setUser(res.data))
+          .then(res => {
+            setUser(res.data);
+          })
           .catch(() => {
             localStorage.removeItem("token");
             router.push("/login");
+          })
+          .finally(() => {
+            setIsLoading(false);
           });
       }
+    } else {
+      setIsLoading(false);
     }
   }, [pathname, router]);
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/register") {
     return <>{children}</>;
+  }
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center bg-[#f3f4f6]">Đang tải...</div>;
   }
 
   return (
@@ -58,42 +72,42 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         </div>
         
         <nav className="flex-grow overflow-y-auto px-4 py-2 space-y-1">
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          <Link href="/" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Home size={20} />
             <span className="font-semibold text-sm">Tổng quan</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/workspaces" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/workspaces' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <FolderKanban size={20} />
             <span className="font-semibold text-sm">Dự án</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-blue-600 text-white transition-colors">
+          </Link>
+          <Link href="/tasks" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/tasks' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <CheckSquare size={20} />
             <span className="font-semibold text-sm">Công việc</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/calendar" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/calendar' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <CalendarDays size={20} />
             <span className="font-semibold text-sm">Lịch</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/analytics" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/analytics' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <BarChart2 size={20} />
             <span className="font-semibold text-sm">Phân tích</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/documents" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/documents' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <FileText size={20} />
             <span className="font-semibold text-sm">Tài liệu</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/messages" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/messages' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <MessageCircle size={20} />
             <span className="font-semibold text-sm">Tin nhắn</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/team" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/team' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Users size={20} />
             <span className="font-semibold text-sm">Nhóm</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+          </Link>
+          <Link href="/settings" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/settings' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Settings size={20} />
             <span className="font-semibold text-sm">Cài đặt</span>
-          </a>
+          </Link>
         </nav>
 
         <div className="p-4">

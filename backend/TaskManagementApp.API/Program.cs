@@ -128,6 +128,7 @@ app.MapControllers();
 
 // SignalR hubs
 app.MapHub<TaskManagementApp.RealTime.TaskHub>("/hubs/tasks");
+app.MapHub<TaskManagementApp.RealTime.ChatHub>("/hubs/chat");
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
 

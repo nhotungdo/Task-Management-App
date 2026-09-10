@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using TaskManagementApp.Domain.Entities;
 using TaskManagementApp.Infrastructure.Data;
 
+using Microsoft.AspNetCore.SignalR;
+using TaskManagementApp.RealTime;
+
 namespace TaskManagementApp.Controllers;
 
 [ApiController]
@@ -16,10 +19,12 @@ namespace TaskManagementApp.Controllers;
 public class ChatController : ControllerBase
 {
     private readonly TaskManagementAppContext _db;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public ChatController(TaskManagementAppContext db)
+    public ChatController(TaskManagementAppContext db, IHubContext<ChatHub> hubContext)
     {
         _db = db;
+        _hubContext = hubContext;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -80,5 +85,50 @@ public class ChatController : ControllerBase
         messages.Reverse();
 
         return Ok(messages);
+    }
+
+    public record SendMessageRequest(Guid? WorkspaceId, Guid? ReceiverId, string Content);
+
+    [HttpPost("chat")]
+    public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Content)) return BadRequest("Message cannot be empty.");
+        if (request.WorkspaceId == null && request.ReceiverId == null) return BadRequest("Must specify WorkspaceId or ReceiverId");
+        
+        var userId = GetUserId();
+        
+        var message = new ChatMessage
+        {
+            MessageId = Guid.NewGuid(),
+            SenderId = userId,
+            WorkspaceId = request.WorkspaceId,
+            ReceiverId = request.ReceiverId,
+            Content = request.Content.Trim(),
+            SentAt = DateTime.UtcNow
+        };
+
+        _db.ChatMessages.Add(message);
+        await _db.SaveChangesAsync();
+
+        var sender = await _db.Users.FindAsync(userId);
+        var broadcastMessage = new {
+            message.MessageId,
+            message.SenderId,
+            SenderName = sender?.FullName ?? sender?.Email,
+            message.Content,
+            message.SentAt,
+            message.ReceiverId
+        };
+
+        if (request.WorkspaceId.HasValue)
+        {
+            await _hubContext.Clients.Group(request.WorkspaceId.Value.ToString()).SendAsync("ReceiveMessage", broadcastMessage);
+        }
+        else if (request.ReceiverId.HasValue)
+        {
+            // Direct message could use UserId based grouping, but for now we just return
+        }
+
+        return Ok(message);
     }
 }

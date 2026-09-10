@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
 import { Settings } from "lucide-react";
 
@@ -82,7 +83,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-text-muted">
-          Chưa có tài khoản? <a href="#" className="text-primary font-bold">Đăng ký</a>
+          Chưa có tài khoản? <Link href="/register" className="text-primary font-bold">Đăng ký</Link>
         </div>
       </div>
     </div>

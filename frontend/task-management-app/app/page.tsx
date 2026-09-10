@@ -24,6 +24,7 @@ interface Task {
   status: string;
   priority: string;
   dueDate?: string;
+  ownerId?: string;
 }
 
 export default function Dashboard() {
@@ -31,17 +32,35 @@ export default function Dashboard() {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersMap, setUsersMap] = useState<Record<string, string>>({});
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchInitData = async () => {
       try {
-        const wsRes = await api.get("/Workspaces");
-        if (wsRes.data && wsRes.data.length > 0) {
-          setWorkspaces(wsRes.data);
-          setActiveWorkspaceId(wsRes.data[0].workspaceId);
+        let wsData, usersData, notifData;
+        try { wsData = (await api.get("/Workspaces")).data; } catch (e) { console.warn("Failed to load workspaces"); }
+        try { usersData = (await api.get("/Users")).data; } catch (e) { console.warn("Failed to load users"); }
+        try { notifData = (await api.get("/Notifications")).data; } catch (e) { console.warn("Failed to load notifications"); }
+
+        if (wsData && wsData.length > 0) {
+          setWorkspaces(wsData);
+          setActiveWorkspaceId(wsData[0].workspaceId);
+        }
+
+        const uMap: Record<string, string> = {};
+        if (usersData) {
+          usersData.forEach((u: any) => {
+            uMap[u.userId] = u.fullName || u.email || 'Người dùng';
+          });
+        }
+        setUsersMap(uMap);
+
+        if (notifData) {
+          setNotifications(notifData);
         }
       } catch (err) {
-        console.error("Failed to load workspaces", err);
+        console.error("Failed to load initial data");
       }
     };
     fetchInitData();
@@ -49,13 +68,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (activeWorkspaceId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true);
       api.get(`/Tasks?workspaceId=${activeWorkspaceId}`)
         .then(res => {
           setTasks(res.data.items || []);
         })
-        .catch(err => console.error(err))
+        .catch(() => console.error("Failed to load tasks"))
         .finally(() => setLoading(false));
     }
   }, [activeWorkspaceId]);
@@ -84,6 +102,19 @@ export default function Dashboard() {
     medium: tasks.filter(t => t.priority === "Medium").length,
     low: tasks.filter(t => t.priority === "Low").length,
   };
+
+  const workloadMap: Record<string, number> = {};
+  tasks.forEach(t => {
+    if (t.ownerId) {
+      workloadMap[t.ownerId] = (workloadMap[t.ownerId] || 0) + 1;
+    }
+  });
+  const workloadArray = Object.entries(workloadMap).map(([id, count]) => ({
+    ownerId: id,
+    name: usersMap[id] || 'Người dùng ẩn',
+    count,
+    percentage: totalTasks ? Math.round((count / totalTasks) * 100) : 0
+  })).sort((a, b) => b.count - a.count).slice(0, 5);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-white rounded-tl-[2rem] border-l border-t border-slate-100 shadow-sm">
@@ -127,7 +158,6 @@ export default function Dashboard() {
             <div>
               <p className="text-sm font-bold text-slate-500 mb-1">Tổng số công việc</p>
               <h3 className="text-3xl font-bold text-slate-800">{totalTasks}</h3>
-              <p className="text-xs font-bold text-green-500 mt-2">↑ 8 tuần này</p>
             </div>
             <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
               <Calendar size={28} />
@@ -138,7 +168,6 @@ export default function Dashboard() {
             <div>
               <p className="text-sm font-bold text-slate-500 mb-1">Đang thực hiện</p>
               <h3 className="text-3xl font-bold text-slate-800">{inProgressCount}</h3>
-              <p className="text-xs font-bold text-amber-500 mt-2">↓ đến hạn hôm nay</p>
             </div>
             <div className="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
               <BarChart3 size={28} />
@@ -149,7 +178,6 @@ export default function Dashboard() {
             <div>
               <p className="text-sm font-bold text-slate-500 mb-1">Đã hoàn thành</p>
               <h3 className="text-3xl font-bold text-slate-800">{completedTasks}</h3>
-              <p className="text-xs font-bold text-green-500 mt-2">↑ 12 tuần này</p>
             </div>
             <div className="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
               <CheckCircle2 size={28} />
@@ -204,10 +232,10 @@ export default function Dashboard() {
                         </div>
                         <MoreVertical size={16} className="text-slate-400 shrink-0 cursor-pointer" />
                       </div>
-                      <div className="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded mb-4">Design</div>
+                      <div className={`inline-block text-[10px] font-bold px-2 py-1 rounded mb-4 ${task.priority === 'High' ? 'bg-red-50 text-red-600' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{task.priority}</div>
                       <div className="flex justify-between items-center text-xs text-slate-400 font-medium border-t border-slate-50 pt-3">
                         <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('vi-VN') : 'Không có hạn'}</span>
-                        <div className="w-6 h-6 rounded-full bg-slate-200"></div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200" title={task.ownerId ? usersMap[task.ownerId] : ''}></div>
                       </div>
                     </div>
                   ))}
@@ -229,14 +257,14 @@ export default function Dashboard() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${task.priority === 'High' ? 'bg-red-500' : task.priority === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
-                          <h4 className="font-bold text-sm text-slate-800 truncate">{task.title}</h4>
+                          <h4 className="font-bold text-sm text-slate-800 truncate" title={task.title}>{task.title}</h4>
                         </div>
                         <MoreVertical size={16} className="text-slate-400 shrink-0" />
                       </div>
-                      <div className="inline-block bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-1 rounded mb-4">Development</div>
+                      <div className={`inline-block text-[10px] font-bold px-2 py-1 rounded mb-4 ${task.priority === 'High' ? 'bg-red-50 text-red-600' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{task.priority}</div>
                       <div className="flex justify-between items-center text-xs text-slate-400 font-medium border-t border-slate-50 pt-3">
                         <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('vi-VN') : 'Không có hạn'}</span>
-                        <div className="w-6 h-6 rounded-full bg-slate-200"></div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200" title={task.ownerId ? usersMap[task.ownerId] : ''}></div>
                       </div>
                     </div>
                   ))}
@@ -258,14 +286,14 @@ export default function Dashboard() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${task.priority === 'High' ? 'bg-red-500' : task.priority === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
-                          <h4 className="font-bold text-sm text-slate-800 truncate">{task.title}</h4>
+                          <h4 className="font-bold text-sm text-slate-800 truncate" title={task.title}>{task.title}</h4>
                         </div>
                         <MoreVertical size={16} className="text-slate-400 shrink-0" />
                       </div>
-                      <div className="inline-block bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-1 rounded mb-4">Review</div>
+                      <div className={`inline-block text-[10px] font-bold px-2 py-1 rounded mb-4 ${task.priority === 'High' ? 'bg-red-50 text-red-600' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{task.priority}</div>
                       <div className="flex justify-between items-center text-xs text-slate-400 font-medium border-t border-slate-50 pt-3">
                         <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('vi-VN') : 'Không có hạn'}</span>
-                        <div className="w-6 h-6 rounded-full bg-slate-200"></div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200" title={task.ownerId ? usersMap[task.ownerId] : ''}></div>
                       </div>
                     </div>
                   ))}
@@ -287,11 +315,11 @@ export default function Dashboard() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${task.priority === 'High' ? 'bg-red-500' : task.priority === 'Medium' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
-                          <h4 className="font-bold text-sm text-slate-800 truncate line-through opacity-70">{task.title}</h4>
+                          <h4 className="font-bold text-sm text-slate-800 truncate line-through opacity-70" title={task.title}>{task.title}</h4>
                         </div>
                         <MoreVertical size={16} className="text-slate-400 shrink-0" />
                       </div>
-                      <div className="inline-block bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded mb-4">Hoàn tất</div>
+                      <div className={`inline-block text-[10px] font-bold px-2 py-1 rounded mb-4 ${task.priority === 'High' ? 'bg-red-50 text-red-600' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{task.priority}</div>
                       <div className="flex justify-between items-center text-xs text-slate-400 font-medium border-t border-slate-50 pt-3">
                         <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('vi-VN') : 'Không có hạn'}</span>
                         <CheckCircle2 size={20} className="text-green-500" />
@@ -313,27 +341,26 @@ export default function Dashboard() {
                   <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="text-xs font-bold text-slate-400 w-10">09:20</div>
-                    <div className="relative">
-                      <div className="w-3 h-3 rounded-full bg-blue-500 z-10 relative"></div>
-                      <div className="absolute top-3 left-1.5 w-[1px] h-full bg-slate-200"></div>
-                    </div>
-                    <div className="flex-1 text-xs">
-                      <span className="font-bold text-slate-800">Nho Tùng</span> đã kéo công việc <span className="font-bold">&quot;Thiết kế UI&quot;</span> sang Đang làm
-                      <div className="text-slate-400 mt-1">2 phút trước</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="text-xs font-bold text-slate-400 w-10">10:15</div>
-                    <div className="relative">
-                      <div className="w-3 h-3 rounded-full bg-green-500 z-10 relative"></div>
-                    </div>
-                    <div className="flex-1 text-xs">
-                      <span className="font-bold text-slate-800">Thanh Xuân</span> đã hoàn thành <span className="font-bold">&quot;Wireframe&quot;</span>
-                      <div className="text-slate-400 mt-1">15 phút trước</div>
-                    </div>
-                  </div>
+                  {notifications.length > 0 ? notifications.slice(0, 5).map((n, idx) => {
+                    const d = new Date(n.createdAt);
+                    return (
+                      <div key={n.notificationId || idx} className="flex gap-4">
+                        <div className="text-xs font-bold text-slate-400 w-10">
+                          {d.getHours().toString().padStart(2, '0')}:{d.getMinutes().toString().padStart(2, '0')}
+                        </div>
+                        <div className="relative">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 z-10 relative"></div>
+                          {idx < notifications.length - 1 && idx < 4 && <div className="absolute top-3 left-1.5 w-[1px] h-full bg-slate-200"></div>}
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-800">{n.message}</span>
+                          <div className="text-slate-400 mt-1">{d.toLocaleDateString('vi-VN')}</div>
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="text-xs text-slate-500">Chưa có hoạt động nào</div>
+                  )}
                 </div>
               </div>
 
@@ -345,22 +372,18 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-slate-200"></div>
-                    <span className="font-bold text-slate-800 w-24">Nho Tùng</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 w-[80%] rounded-full"></div>
+                  {workloadArray.length > 0 ? workloadArray.map(w => (
+                    <div key={w.ownerId} className="flex items-center gap-3 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-slate-200"></div>
+                      <span className="font-bold text-slate-800 w-24 truncate" title={w.name}>{w.name}</span>
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 rounded-full" style={{width: `${w.percentage}%`}}></div>
+                      </div>
+                      <span className="font-bold text-slate-600 w-8 text-right">{w.percentage}%</span>
                     </div>
-                    <span className="font-bold text-slate-600 w-8 text-right">80%</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-slate-200"></div>
-                    <span className="font-bold text-slate-800 w-24">Thanh Xuân</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 w-[65%] rounded-full"></div>
-                    </div>
-                    <span className="font-bold text-slate-600 w-8 text-right">65%</span>
-                  </div>
+                  )) : (
+                    <div className="text-xs text-slate-500">Chưa có dữ liệu</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -377,16 +400,20 @@ export default function Dashboard() {
                 <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
               </div>
               <div className="space-y-3">
-                {tasks.slice(0, 4).map((t, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded text-blue-600 border-slate-300" defaultChecked={t.status === 'Done'} />
-                      <span className={`text-sm font-bold truncate w-32 ${t.status === 'Done' ? 'line-through text-slate-400' : 'text-slate-800'}`}>{t.title}</span>
+                {tasks.slice(0, 4).map((t, idx) => {
+                  const d = t.dueDate ? new Date(t.dueDate) : null;
+                  return (
+                    <div key={t.taskId || idx} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <input type="checkbox" className="w-4 h-4 rounded text-blue-600 border-slate-300" defaultChecked={t.status === 'Done'} />
+                        <span className={`text-sm font-bold truncate w-32 ${t.status === 'Done' ? 'line-through text-slate-400' : 'text-slate-800'}`} title={t.title}>{t.title}</span>
+                      </div>
+                      <div className={`text-[10px] font-bold px-2 py-1 rounded ${t.priority === 'High' ? 'bg-red-50 text-red-600' : t.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{t.priority}</div>
+                      <div className="text-[10px] font-bold text-slate-500">{d ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}` : 'Cả ngày'}</div>
                     </div>
-                    <div className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">Dev</div>
-                    <div className="text-[10px] font-bold text-slate-500">09:00 AM</div>
-                  </div>
-                ))}
+                  );
+                })}
+                {tasks.length === 0 && <div className="text-xs text-slate-500">Không có việc</div>}
               </div>
             </div>
 
@@ -397,18 +424,22 @@ export default function Dashboard() {
                 <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
               </div>
               <div className="space-y-3">
-                {tasks.slice(4, 7).map((t, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Calendar size={14} className="text-blue-500" />
-                      <span className="text-[10px] font-bold text-slate-500 w-12">Aug 14</span>
-                      <span className="text-sm font-bold text-slate-800 truncate w-32">{t.title}</span>
+                {tasks.slice(4, 7).map((t, idx) => {
+                  const d = t.dueDate ? new Date(t.dueDate) : null;
+                  return (
+                    <div key={t.taskId || idx} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Calendar size={14} className="text-blue-500" />
+                        <span className="text-[10px] font-bold text-slate-500 w-12">{d ? `${d.getDate()}/${d.getMonth()+1}` : 'N/A'}</span>
+                        <span className="text-sm font-bold text-slate-800 truncate w-32" title={t.title}>{t.title}</span>
+                      </div>
+                      <div className={`text-[10px] font-bold px-2 py-1 rounded ${t.priority === 'High' ? 'bg-red-50 text-red-600' : t.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {t.priority}
+                      </div>
                     </div>
-                    <div className={`text-[10px] font-bold px-2 py-1 rounded ${t.priority === 'High' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                      {t.priority}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+                {tasks.length <= 4 && <div className="text-xs text-slate-500">Không có việc sắp tới</div>}
               </div>
             </div>
 
