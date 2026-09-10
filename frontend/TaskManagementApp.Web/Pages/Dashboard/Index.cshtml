@@ -1,0 +1,76 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-container">
+    <h3 class="fw-bold mb-4">Dashboard</h3>
+
+    <!-- Statistics Widgets -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center">
+                <i class="fa-solid fa-list-check fs-1 text-primary mb-3"></i>
+                <h5 class="text-muted">Open Tasks</h5>
+                <h2 class="fw-bold m-0">@Model.OpenTasks</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center">
+                <i class="fa-solid fa-triangle-exclamation fs-1 text-danger mb-3"></i>
+                <h5 class="text-muted">Overdue Tasks</h5>
+                <h2 class="fw-bold m-0">@Model.OverdueTasks</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center">
+                <i class="fa-solid fa-check-circle fs-1 text-success mb-3"></i>
+                <h5 class="text-muted">Completed (This Week)</h5>
+                <h2 class="fw-bold m-0">@Model.CompletedThisWeek</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Tasks for Today -->
+    <h5 class="fw-bold mb-3">My Tasks For Today</h5>
+    <div class="glass-panel p-4">
+        @if (Model.TodayTasks.Any())
+        {
+            <div class="list-group list-group-flush bg-transparent">
+                @foreach (var task in Model.TodayTasks)
+                {
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="task-@task.TaskId">
+                            </div>
+                            <label class="form-check-label fw-semibold" for="task-@task.TaskId">
+                                @task.Title
+                            </label>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary rounded-pill">@task.Priority</span>
+                            <span class="badge bg-secondary rounded-pill ms-2">@task.Status</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-muted py-4">
+                <i class="fa-solid fa-mug-hot fs-3 mb-2"></i>
+                <p class="m-0">No tasks due today. Great job!</p>
+            </div>
+        }
+    </div>
+    
+    @if(Model.OpenTasks == 0 && Model.OverdueTasks == 0 && Model.CompletedThisWeek == 0)
+    {
+        <div class="alert alert-warning mt-4 glass-panel border-warning text-warning" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i> 
+            <strong>Lưu ý:</strong> API trả về 0 kết quả hoặc chưa có dữ liệu. Hãy đảm bảo bạn đã đăng nhập và cung cấp <code>Bearer Token</code> hợp lệ trong mã nguồn để lấy dữ liệu thực từ Database.
+        </div>
+    }
+</div>

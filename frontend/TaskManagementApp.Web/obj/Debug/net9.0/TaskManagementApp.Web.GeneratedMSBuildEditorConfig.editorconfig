@@ -20,6 +20,18 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 9.0
 build_property.EnableCodeStyleSeverity = 
 
+[F:/PRN232-Review/Task-Management-App/frontend/TaskManagementApp.Web/Pages/Board/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQm9hcmRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/PRN232-Review/Task-Management-App/frontend/TaskManagementApp.Web/Pages/Board/_TaskCard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQm9hcmRcX1Rhc2tDYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/PRN232-Review/Task-Management-App/frontend/TaskManagementApp.Web/Pages/Dashboard/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaGJvYXJkXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [F:/PRN232-Review/Task-Management-App/frontend/TaskManagementApp.Web/Pages/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 

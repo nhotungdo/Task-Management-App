@@ -3,17 +3,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace TaskManagementApp.Web.Pages;
 
-public class IndexModel : PageModel
+public class RootIndexModel : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
-
-    public IndexModel(ILogger<IndexModel> logger)
+    public IActionResult OnGet()
     {
-        _logger = logger;
-    }
-
-    public void OnGet()
-    {
-
+        return RedirectToPage("/Dashboard/Index");
     }
 }

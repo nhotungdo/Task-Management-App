@@ -1,52 +1,119 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TaskManagementApp.Web</title>
+    <title>@ViewData["Title"] - TaskManagementApp</title>
     <script type="importmap"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TaskManagementApp.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">TaskManagementApp.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+<body class="d-flex">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel m-3 d-flex flex-column">
+        <div class="sidebar-header p-3 text-center">
+            <h4 class="fw-bold m-0"><span class="text-gradient">TaskApp</span></h4>
+        </div>
+        
+        <div class="sidebar-profile p-3 text-center border-bottom border-secondary mb-3">
+            <div class="avatar bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold" style="width: 60px; height: 60px; font-size: 24px;">
+                NT
+            </div>
+            <h6 class="mt-2 mb-0">Nho Tùng</h6>
+            <small class="text-muted">Administrator</small>
+        </div>
+
+        <nav class="sidebar-nav flex-grow-1 px-2">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-1">
+                    <a class="nav-link px-3 py-2 rounded d-flex align-items-center" asp-page="/Dashboard/Index">
+                        <i class="fa-solid fa-chart-pie me-3"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link px-3 py-2 rounded d-flex align-items-center" href="#">
+                        <i class="fa-solid fa-list-check me-3"></i> My Tasks
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link px-3 py-2 rounded d-flex align-items-center active-nav" asp-page="/Board/Index">
+                        <i class="fa-solid fa-kanban me-3"></i> Kanban Board
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link px-3 py-2 rounded d-flex align-items-center" href="#">
+                        <i class="fa-regular fa-calendar me-3"></i> Calendar
+                    </a>
+                </li>
+            </ul>
+
+            <h6 class="px-3 mt-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Team</h6>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link px-3 py-1 text-muted" href="#"><i class="fa-regular fa-user me-2"></i> Nhật Tùng</a></li>
+                <li class="nav-item"><a class="nav-link px-3 py-1 text-muted" href="#"><i class="fa-regular fa-user me-2"></i> Hữu Long</a></li>
+                <li class="nav-item"><a class="nav-link px-3 py-1 text-muted" href="#"><i class="fa-regular fa-user me-2"></i> Huy Quang</a></li>
+                <li class="nav-item"><a class="nav-link px-3 py-1 text-muted" href="#"><i class="fa-regular fa-user me-2"></i> Tây Bắc</a></li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-footer p-3 mt-auto border-top border-secondary">
+            <a href="#" class="nav-link px-3 py-2 rounded d-flex align-items-center text-muted">
+                <i class="fa-solid fa-gear me-3"></i> Settings
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper flex-grow-1 d-flex flex-column m-3 ms-0">
+        <!-- Header -->
+        <header class="glass-panel d-flex justify-content-between align-items-center px-4 py-3 mb-3">
+            <div class="search-bar position-relative" style="width: 300px;">
+                <i class="fa-solid fa-search position-absolute text-muted" style="left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                <input type="text" class="form-control bg-dark text-white border-0 ps-5" placeholder="Search tasks, projects..." style="border-radius: 20px;">
+            </div>
+            
+            <div class="header-actions d-flex align-items-center gap-3">
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" style="background: var(--gradient-text); border: none;">
+                    <i class="fa-solid fa-plus me-2"></i> Create Task
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <div class="notification-icon position-relative cursor-pointer ms-2">
+                    <i class="fa-regular fa-bell fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
+        </header>
+
+        <!-- Main Body -->
+        <main role="main" class="flex-grow-1 glass-panel p-4 overflow-auto position-relative">
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - TaskManagementApp.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <!-- Right Sidebar Drawer (Task Detail) -->
+    <div class="offcanvas offcanvas-end glass-panel border-0 text-white" tabindex="-1" id="taskDetailDrawer" style="width: 500px; background: rgba(15,23,42,0.95);">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold" id="taskDrawerTitle">Task Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-    </footer>
+        <div class="offcanvas-body" id="taskDrawerBody">
+            <!-- Content loaded via JS -->
+            <div class="text-center mt-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- Cloud Cursor Element -->
+    <div id="cloud-cursor"></div>
 </body>
 </html>

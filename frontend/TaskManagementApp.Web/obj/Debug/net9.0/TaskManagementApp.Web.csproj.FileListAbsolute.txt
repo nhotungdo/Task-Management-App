@@ -119,9 +119,7 @@ F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\ne
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\scopedcss\Pages\Shared\_Layout.cshtml.rz.scp.css
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\scopedcss\bundle\TaskManagementApp.Web.styles.css
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\scopedcss\projectbundle\TaskManagementApp.Web.bundle.scp.css
-F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\x3eg6l1aax-b9sayid5wm.gz
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\luqysrxq79-61n19gt1b8.gz
-F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\lsid0sece2-xtxxf3hu2r.gz
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\23opjwz8vo-bqjiyaj88i.gz
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\dmiecjxvsn-c2jlpeoesf.gz
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\i64okoqc75-erw9l3u2r3.gz
@@ -192,3 +190,5 @@ F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\ne
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\TaskManagementApp.Web.pdb
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\TaskManagementApp.Web.genruntimeconfig.cache
 F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\ref\TaskManagementApp.Web.dll
+F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\lsid0sece2-u4en5iraew.gz
+F:\PRN232-Review\Task-Management-App\frontend\TaskManagementApp.Web\obj\Debug\net9.0\compressed\x3eg6l1aax-debiur3wju.gz
