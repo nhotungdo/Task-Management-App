@@ -562,3 +562,9 @@ F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\obj\Debug\net
 F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\obj\Debug\net8.0\TaskManagementApp.API.pdb
 F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\obj\Debug\net8.0\TaskManagementApp.API.genruntimeconfig.cache
 F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\obj\Debug\net8.0\ref\TaskManagementApp.API.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\Google.Apis.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\Google.Apis.Auth.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\Google.Apis.Core.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\Newtonsoft.Json.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\System.Management.dll
+F:\PRN232-Review\Task-Management-App\backend\TaskManagementApp.API\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll

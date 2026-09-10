@@ -30,10 +30,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (pathname !== "/login" && pathname !== "/register") {
+    if (pathname !== "/login" && pathname !== "/register" && pathname !== "/welcome") {
       const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/login");
+        router.push("/welcome");
         setIsLoading(false);
       } else {
         // Fetch user info
@@ -54,7 +54,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     }
   }, [pathname, router]);
 
-  if (pathname === "/login" || pathname === "/register") {
+  if (pathname === "/login" || pathname === "/register" || pathname === "/welcome") {
     return <>{children}</>;
   }
 

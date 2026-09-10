@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -18,9 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} text-slate-800`}>
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock_client_id"}>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

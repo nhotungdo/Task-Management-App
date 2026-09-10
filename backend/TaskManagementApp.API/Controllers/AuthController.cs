@@ -1,4 +1,4 @@
-﻿using TaskManagementApp.Infrastructure.Services;
+using TaskManagementApp.Infrastructure.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManagementApp.Domain.Entities;
 using TaskManagementApp.Infrastructure.Data;
+using Google.Apis.Auth;
 
 namespace TaskManagementApp.Controllers;
 
@@ -26,6 +27,50 @@ public class AuthController : ControllerBase
 
     public record RegisterRequest(string Email, string Password, string? FullName);
     public record LoginRequest(string Email, string Password);
+    public record GoogleLoginRequest(string Credential);
+
+    [HttpPost("google")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        try
+        {
+            // TODO: In production, add your ClientId to ValidationSettings.Audience
+            var settings = new GoogleJsonWebSignature.ValidationSettings();
+            var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, settings);
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    UserId = Guid.NewGuid(),
+                    Email = payload.Email,
+                    FullName = payload.Name,
+                    PasswordHash = "google_oauth",
+                    Role = "User",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+            var token = _tokenService.CreateToken(claims);
+            return Ok(new { token, user = new { user.UserId, user.Email, user.FullName, user.Role } });
+        }
+        catch (InvalidJwtException)
+        {
+            return Unauthorized("Invalid Google Token. Please check your Client ID.");
+        }
+    }
 
     [HttpPost("register")]
     [AllowAnonymous]
