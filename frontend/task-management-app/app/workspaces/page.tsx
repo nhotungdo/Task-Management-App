@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FolderKanban, Plus, MoreVertical, Calendar } from "lucide-react";
+import { FolderKanban, Plus, MoreVertical, Calendar, Sparkles, Loader2 } from "lucide-react";
+import Link from "next/link";
 import api from "@/lib/api";
 
 interface Workspace {
@@ -18,6 +19,11 @@ export default function WorkspacesPage() {
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiProgress, setAiProgress] = useState(0);
 
   const loadWorkspaces = async () => {
     setLoading(true);
@@ -52,6 +58,49 @@ export default function WorkspacesPage() {
     }
   };
 
+  const handleAiGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiPrompt.trim()) return;
+    setIsGenerating(true);
+    setAiProgress(0);
+    
+    // Simulate AI thinking and generating
+    const interval = setInterval(() => setAiProgress(p => p < 90 ? p + 10 : p), 500);
+    
+    setTimeout(async () => {
+      clearInterval(interval);
+      setAiProgress(100);
+      try {
+        const wsRes = await api.post("/Workspaces", { 
+          name: "Dự án AI: " + aiPrompt.slice(0, 20) + "...", 
+          description: "Sinh tự động từ prompt: " + aiPrompt 
+        });
+        const newWsId = wsRes.data.workspaceId || wsRes.data.id;
+        
+        // Mock some tasks
+        const mockTasks = [
+          { title: "Nghiên cứu thị trường", status: "Done", priority: "High" },
+          { title: "Thiết kế UI/UX", status: "In Progress", priority: "High" },
+          { title: "Phát triển Backend", status: "To Do", priority: "Medium" },
+          { title: "Phát triển Frontend", status: "To Do", priority: "High" },
+          { title: "Kiểm thử và Triển khai", status: "To Do", priority: "Low" },
+        ];
+        
+        for (const t of mockTasks) {
+          try { await api.post("/Tasks", { ...t, workspaceId: newWsId }); } catch(e){}
+        }
+        
+        setIsAiModalOpen(false);
+        setAiPrompt("");
+        await loadWorkspaces();
+      } catch (err) {
+        console.error("AI Generation failed");
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 3000);
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-white rounded-tl-[2rem] border-l border-t border-slate-100 shadow-sm">
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
@@ -59,12 +108,20 @@ export default function WorkspacesPage() {
           <h2 className="text-2xl font-bold text-slate-800">Dự án của bạn</h2>
           <p className="text-sm text-slate-500 font-medium">Quản lý các không gian làm việc</p>
         </div>
-        <button 
-          onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700"
-        >
-          <Plus size={16} /> Tạo dự án mới
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setIsAiModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white rounded-full text-sm font-bold hover:shadow-lg transition-all"
+          >
+            <Sparkles size={16} /> Tạo dự án bằng AI
+          </button>
+          <button 
+            onClick={() => setIsCreating(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700"
+          >
+            <Plus size={16} /> Tạo dự án mới
+          </button>
+        </div>
       </header>
 
       <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
@@ -136,9 +193,9 @@ export default function WorkspacesPage() {
                     <Calendar size={14} />
                     <span>{new Date(ws.createdAt).toLocaleDateString('vi-VN')}</span>
                   </div>
-                  <a href={`/?workspaceId=${ws.workspaceId}`} className="text-sm font-bold text-blue-600 hover:underline">
+                  <Link href={`/workspaces/${ws.workspaceId}`} className="text-sm font-bold text-blue-600 hover:underline">
                     Mở dự án
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -150,6 +207,67 @@ export default function WorkspacesPage() {
           </div>
         )}
       </div>
+
+      {/* AI Modal */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
+            {/* Animated gradient header */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-cyan-500 animate-pulse"></div>
+            
+            <div className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-fuchsia-50 flex items-center justify-center text-fuchsia-600">
+                  <Sparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-slate-800">Tạo dự án bằng AI</h3>
+                  <p className="text-sm text-slate-500">Mô tả ý tưởng, AI sẽ lập kế hoạch cho bạn.</p>
+                </div>
+              </div>
+              
+              {!isGenerating ? (
+                <form onSubmit={handleAiGenerate}>
+                  <textarea 
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 min-h-[120px] resize-none mb-6" 
+                    placeholder="VD: Xây dựng một chiến dịch Marketing ra mắt sản phẩm nước hoa mới trong 1 tháng tới..."
+                    autoFocus
+                  />
+                  <div className="flex gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => setIsAiModalOpen(false)}
+                      className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={!aiPrompt.trim()}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      Bắt đầu tạo
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="py-8 text-center space-y-6">
+                  <Loader2 size={48} className="mx-auto text-fuchsia-500 animate-spin" />
+                  <div>
+                    <h4 className="font-bold text-lg text-slate-800 mb-1">AI đang lập kế hoạch...</h4>
+                    <p className="text-sm text-slate-500">Đang phân tích yêu cầu và phân bổ nguồn lực</p>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 transition-all duration-300" style={{ width: `${aiProgress}%` }}></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

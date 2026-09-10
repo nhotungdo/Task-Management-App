@@ -26,6 +26,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
+  const [statusFilter, setStatusFilter] = useState<string>("All");
 
   useEffect(() => {
     const fetchInitData = async () => {
@@ -86,9 +87,20 @@ export default function TasksPage() {
             <input 
               type="text" 
               placeholder="Tìm kiếm công việc..." 
-              className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm focus:outline-none focus:border-blue-500 w-[250px]"
+              className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm focus:outline-none focus:border-blue-500 w-[200px]"
             />
           </div>
+          <select 
+            value={statusFilter} 
+            onChange={e => setStatusFilter(e.target.value)}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500"
+          >
+            <option value="All">Tất cả trạng thái</option>
+            <option value="To Do">Cần làm</option>
+            <option value="In Progress">Đang làm</option>
+            <option value="In Review">Chờ duyệt</option>
+            <option value="Done">Hoàn thành</option>
+          </select>
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700">
             <Plus size={16} /> Tạo công việc
           </button>
@@ -116,7 +128,7 @@ export default function TasksPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {tasks.map(t => (
+                {tasks.filter(t => statusFilter === "All" || t.status === statusFilter).map(t => (
                   <tr key={t.taskId} className="hover:bg-slate-50 transition-colors">
                     <td className="p-4">
                       <p className="font-bold text-sm text-slate-800">{t.title}</p>

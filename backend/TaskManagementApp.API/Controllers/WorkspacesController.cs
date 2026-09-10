@@ -44,6 +44,26 @@ public class WorkspacesController : ControllerBase
         return Ok(workspaces);
     }
 
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetWorkspaceById(Guid id)
+    {
+        var userId = GetUserId();
+        var workspace = await _db.WorkspaceMembers
+            .Include(wm => wm.Workspace)
+            .Where(wm => wm.WorkspaceId == id && wm.UserId == userId)
+            .Select(wm => new { 
+                wm.Workspace.WorkspaceId, 
+                wm.Workspace.Name, 
+                wm.Workspace.Description,
+                wm.Workspace.CreatedAt,
+                Role = wm.Role 
+            })
+            .FirstOrDefaultAsync();
+
+        if (workspace == null) return NotFound();
+        return Ok(workspace);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateWorkspace([FromBody] WorkspaceCreateDto dto)
     {
