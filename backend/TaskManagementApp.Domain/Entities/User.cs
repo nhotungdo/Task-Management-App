@@ -33,4 +33,7 @@ public partial class User
     public virtual ICollection<WorkspaceMember> WorkspaceMembers { get; set; } = new List<WorkspaceMember>();
     public virtual ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
     public virtual ICollection<ChatMessage> ReceivedMessages { get; set; } = new List<ChatMessage>();
+    public virtual ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
+    public virtual ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
+    public virtual ICollection<TaskAttachment> TaskAttachments { get; set; } = new List<TaskAttachment>();
 }

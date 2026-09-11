@@ -5,24 +5,32 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
-import { CheckCircle2, ChevronRight, Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Layers, CheckCircle, BarChart2, GitBranch, Users } from "lucide-react";
 import { GoogleLogin } from '@react-oauth/google';
+
+const BENEFITS = [
+  { icon: CheckCircle, text: "Không cần thẻ tín dụng" },
+  { icon: BarChart2, text: "Gantt Chart & báo cáo đầy đủ" },
+  { icon: GitBranch, text: "Quản lý phụ thuộc task thông minh" },
+  { icon: Users, text: "Cộng tác nhóm không giới hạn" },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) { setError("Mật khẩu phải có ít nhất 6 ký tự"); return; }
     setLoading(true);
     setError("");
     try {
       await api.post("/Auth/register", { email, password, fullName });
-      // Redirect to login after successful register
       router.push("/login");
     } catch (err: any) {
       setError(err.response?.data || "Đăng ký thất bại");
@@ -39,157 +47,136 @@ export default function RegisterPage() {
       localStorage.setItem("token", res.data.token);
       router.push("/");
     } catch (err: any) {
-      setError(err.response?.data || "Đăng nhập Google thất bại (Vui lòng kiểm tra Client ID)");
+      setError(err.response?.data || "Đăng nhập Google thất bại");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex font-sans bg-white flex-row-reverse">
-      
-      {/* Right side: Register Form */}
-      <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 xl:px-32 relative">
-        <Link href="/welcome" className="absolute top-10 right-8 sm:right-16 lg:right-24 xl:right-32 flex items-center gap-2 group">
-          <span className="text-xl font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">DoneIt<span className="text-indigo-600">.</span></span>
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center">
-            <CheckCircle2 size={18} className="text-white" />
+    <div style={{ minHeight: "100vh", display: "flex", fontFamily: "'Inter', sans-serif", background: "#fff" }}>
+
+      {/* ── Left: Dark visual ── */}
+      <div style={{ width: 480, background: "var(--sidebar-bg)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "60px 56px", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ position: "absolute", top: -100, left: -100, width: 300, height: 300, borderRadius: "50%", background: "rgba(0,82,204,0.08)" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 240, height: 240, borderRadius: "50%", background: "rgba(0,82,204,0.05)" }} />
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Link href="/welcome" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", marginBottom: 48 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg, #0052cc, #0073e6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Layers size={16} color="#fff" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>
+              DoneIt<span style={{ color: "#4da6ff" }}>.</span>
+            </span>
+          </Link>
+
+          <div style={{ marginBottom: 36 }}>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1.3, marginBottom: 12 }}>
+              Bắt đầu trong<br />
+              <span style={{ color: "#4da6ff" }}>30 giây</span>
+            </h2>
+            <p style={{ fontSize: 14, color: "#8fa3c0", lineHeight: 1.6 }}>
+              Tạo tài khoản và ngay lập tức có thể tạo dự án, Gantt Chart và mời đồng đội tham gia.
+            </p>
           </div>
-        </Link>
 
-        <div className="w-full max-w-sm mx-auto mt-12">
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Bắt đầu ngay hôm nay</h1>
-          <p className="text-slate-500 font-medium mb-8">Tạo tài khoản miễn phí để trải nghiệm nền tảng.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {BENEFITS.map(b => (
+              <div key={b.text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(0,82,204,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <b.icon size={14} color="#4da6ff" />
+                </div>
+                <span style={{ fontSize: 13, color: "#c8d6e8", fontWeight: 500 }}>{b.text}</span>
+              </div>
+            ))}
+          </div>
 
-          <div className="mb-6 flex justify-center">
+          {/* Divider */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", margin: "36px 0" }} />
+
+          <div style={{ fontSize: 13, color: "#6b85a3" }}>
+            Đã có tài khoản?{" "}
+            <Link href="/login" style={{ color: "#4da6ff", fontWeight: 600, textDecoration: "none" }}>Đăng nhập tại đây</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right: Form ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: 48 }}>
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: "#172b4d", marginBottom: 6 }}>Tạo tài khoản</h1>
+          <p style={{ fontSize: 14, color: "#5e6c84", marginBottom: 24 }}>Miễn phí, không cần thẻ tín dụng</p>
+
+          {/* Google */}
+          <div style={{ marginBottom: 16 }}>
             {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError("Đăng nhập Google thất bại")}
-                useOneTap
-                theme="outline"
-                size="large"
-                width="100%"
-                text="signup_with"
-              />
+              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Đăng nhập Google thất bại")}
+                useOneTap theme="outline" size="large" width="100%" text="signup_with" />
             ) : (
-              <button
-                type="button"
-                onClick={() => setError("Vui lòng cấu hình NEXT_PUBLIC_GOOGLE_CLIENT_ID trong file .env")}
-                className="w-full flex items-center justify-center gap-3 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-50 transition-colors"
-              >
-                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+              <button type="button" onClick={() => setError("Cấu hình NEXT_PUBLIC_GOOGLE_CLIENT_ID trong .env")}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "10px 16px", border: "1px solid #dde1e7", borderRadius: 4, fontSize: 14, fontWeight: 500, color: "#172b4d", background: "#fff", cursor: "pointer" }}>
+                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
                 Đăng ký với Google
               </button>
             )}
           </div>
 
-          <div className="relative flex items-center py-5">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-semibold">Hoặc đăng ký bằng Email</span>
-            <div className="flex-grow border-t border-slate-200"></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
+            <span style={{ fontSize: 12, color: "#97a0af", fontWeight: 500 }}>hoặc</span>
+            <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
           </div>
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
-                {error}
-              </div>
-            )}
-            
+          {error && (
+            <div style={{ padding: "10px 14px", background: "#fff5f5", border: "1px solid #fed7d7", borderRadius: 4, fontSize: 13, color: "#c53030", marginBottom: 14, fontWeight: 500 }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Họ và Tên</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="text" 
-                  required 
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
-                  placeholder="Nguyễn Văn A"
-                />
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 5 }}>Họ và tên</label>
+              <div style={{ position: "relative" }}>
+                <User size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)}
+                  className="gp-input" style={{ paddingLeft: 30 }} placeholder="Nguyễn Văn A" autoFocus />
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 5 }}>Email</label>
+              <div style={{ position: "relative" }}>
+                <Mail size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="gp-input" style={{ paddingLeft: 30 }} placeholder="name@company.com" />
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 5 }}>Mật khẩu</label>
+              <div style={{ position: "relative" }}>
+                <Lock size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type={showPwd ? "text" : "password"} required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
+                  className="gp-input" style={{ paddingLeft: 30, paddingRight: 36 }} placeholder="Ít nhất 6 ký tự" />
+                <button type="button" onClick={() => setShowPwd(v => !v)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#97a0af", padding: 0 }}>
+                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="email" 
-                  required 
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
-                  placeholder="name@company.com"
-                />
-              </div>
-            </div>
+            <p style={{ fontSize: 11, color: "#97a0af", margin: "2px 0 4px" }}>
+              Bằng cách đăng ký, bạn đồng ý với{" "}
+              <a href="#" style={{ color: "#0052cc" }}>Điều khoản dịch vụ</a> và{" "}
+              <a href="#" style={{ color: "#0052cc" }}>Chính sách bảo mật</a>
+            </p>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Mật khẩu</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
-                  placeholder="Ít nhất 8 ký tự"
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2 mt-2 shadow-lg shadow-indigo-600/20"
-            >
-              {loading ? "Đang xử lý..." : "Tạo tài khoản"} <ChevronRight size={18} />
+            <button type="submit" disabled={loading}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", background: loading ? "#80a8e0" : "#0052cc", color: "#fff", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", transition: "background 0.15s" }}>
+              {loading ? "Đang tạo tài khoản..." : <>Tạo tài khoản <ArrowRight size={15} /></>}
             </button>
           </form>
-
-          <p className="mt-8 text-center text-sm font-medium text-slate-600">
-            Đã có tài khoản? <Link href="/login" className="font-bold text-indigo-600 hover:text-indigo-700">Đăng nhập</Link>
-          </p>
         </div>
       </div>
-
-      {/* Left side: Graphic/Image */}
-      <div className="hidden lg:flex flex-1 relative bg-slate-900 items-center justify-center overflow-hidden p-12">
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-indigo-900 to-violet-900 opacity-95"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-        
-        <div className="relative z-10 w-full max-w-lg bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-          <div className="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30">
-            <CheckCircle2 size={32} className="text-white" />
-          </div>
-          <h2 className="text-3xl font-black text-white leading-tight mb-4">
-            Bước đầu tiên để làm chủ công việc.
-          </h2>
-          <p className="text-indigo-200 font-medium leading-relaxed mb-8">
-            Chỉ mất 30 giây để thiết lập tài khoản. Sau đó, bạn sẽ có toàn bộ quyền kiểm soát các dự án, tiến độ và đội ngũ của mình.
-          </p>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <CheckCircle2 size={14} />
-              </div>
-              <span className="text-sm font-semibold text-slate-300">Không cần thẻ tín dụng</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <CheckCircle2 size={14} />
-              </div>
-              <span className="text-sm font-semibold text-slate-300">Bảo mật dữ liệu chuẩn doanh nghiệp</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
     </div>
   );
 }

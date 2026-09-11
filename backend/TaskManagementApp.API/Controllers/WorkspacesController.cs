@@ -123,4 +123,70 @@ public class WorkspacesController : ControllerBase
 
         return Ok(new { message = "Member added successfully" });
     }
+
+    public record InviteMemberByEmailDto(string Email);
+
+    [HttpPost("{id:guid}/invite-by-email")]
+    public async Task<IActionResult> InviteMemberByEmail(Guid id, [FromBody] InviteMemberByEmailDto dto)
+    {
+        var currentUserId = GetUserId();
+        
+        // Verify caller is admin of this workspace
+        var isAdmin = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == id && wm.UserId == currentUserId && wm.Role == "Admin");
+        if (!isAdmin) return Forbid();
+
+        // Find user by email
+        var userToInvite = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+        if (userToInvite == null) return NotFound(new { message = "Không tìm thấy người dùng với email này." });
+
+        // Check if already a member
+        var exists = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == id && wm.UserId == userToInvite.UserId);
+        if (exists) return Conflict(new { message = "Người dùng này đã là thành viên của DoneIt." });
+
+        var newMember = new WorkspaceMember
+        {
+            WorkspaceMemberId = Guid.NewGuid(),
+            WorkspaceId = id,
+            UserId = userToInvite.UserId,
+            Role = "Member",
+            JoinedAt = DateTime.UtcNow
+        };
+
+        _db.WorkspaceMembers.Add(newMember);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { 
+            message = "Mời thành viên thành công.",
+            member = new {
+                userToInvite.UserId,
+                userToInvite.Email,
+                userToInvite.FullName,
+                Role = "Member"
+            }
+        });
+    }
+
+    [HttpGet("{id:guid}/members")]
+    public async Task<IActionResult> GetWorkspaceMembers(Guid id)
+    {
+        var currentUserId = GetUserId();
+        
+        // Verify caller has access to this workspace
+        var hasAccess = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == id && wm.UserId == currentUserId);
+        if (!hasAccess) return Forbid();
+
+        var members = await _db.WorkspaceMembers
+            .Include(wm => wm.User)
+            .Where(wm => wm.WorkspaceId == id)
+            .Select(wm => new {
+                wm.UserId,
+                wm.User.Email,
+                wm.User.FullName,
+                wm.Role,
+                wm.JoinedAt
+            })
+            .ToListAsync();
+
+        return Ok(members);
+    }
 }

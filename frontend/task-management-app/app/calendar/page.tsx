@@ -25,7 +25,7 @@ export default function CalendarPage() {
     <div className="flex flex-col h-full overflow-hidden bg-white rounded-tl-[2rem] border-l border-t border-slate-100 shadow-sm">
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Lịch dự án</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Lịch DoneIt</h2>
           <p className="text-sm text-slate-500 font-medium">Theo dõi deadline và sự kiện</p>
         </div>
         <div className="flex items-center gap-4">

@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Phân tích & Báo cáo</h2>
-          <p className="text-sm text-slate-500 font-medium">Theo dõi hiệu suất và tiến độ dự án</p>
+          <p className="text-sm text-slate-500 font-medium">Theo dõi hiệu suất và tiến độ DoneIt</p>
         </div>
       </header>
 

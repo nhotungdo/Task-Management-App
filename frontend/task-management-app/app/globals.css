@@ -1,53 +1,385 @@
 @import "tailwindcss";
 
-@theme {
-  --color-bg-main: #f5f6f9;
-  --color-bg-white: #ffffff;
-  --color-text-main: #1d1d1f;
-  --color-text-muted: #86868b;
-  --color-primary: #4361ee;
-  --color-primary-light: #eff3ff;
-  --color-accent-a: #2563eb;
-  --color-accent-b: #a855f7;
-  --color-accent-c: #ec4899;
-  --color-accent-d: #f59e0b;
+/* ══════════════════════════════════════════════
+   GanttPRO Design System Tokens
+══════════════════════════════════════════════ */
+:root {
+  /* Sidebar */
+  --sidebar-bg: #1e2a3b;
+  --sidebar-hover: #263447;
+  --sidebar-active: #0052cc;
+  --sidebar-text: #8fa3c0;
+  --sidebar-text-active: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-width: 240px;
+
+  /* Top bar */
+  --topbar-bg: #ffffff;
+  --topbar-border: #e8edf3;
+  --topbar-height: 52px;
+
+  /* Content */
+  --content-bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-hover: #f8f9fb;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* Brand Colors */
+  --blue: #0052cc;
+  --blue-hover: #0047b3;
+  --blue-light: #e6f0ff;
+  --blue-text: #0052cc;
+
+  /* Status Colors */
+  --status-todo: #6b7280;
+  --status-inprogress: #f59e0b;
+  --status-review: #8b5cf6;
+  --status-done: #10b981;
+
+  /* Priority Colors */
+  --priority-low: #6366f1;
+  --priority-normal: #6b7280;
+  --priority-medium: #f59e0b;
+  --priority-high: #ef4444;
+
+  /* Text */
+  --text-primary: #172b4d;
+  --text-secondary: #5e6c84;
+  --text-tertiary: #97a0af;
+  --text-white: #ffffff;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-xl: 0 20px 40px rgba(0,0,0,0.15);
 }
 
-@layer base {
-  body {
-    background-color: var(--color-bg-main);
-    color: var(--color-text-main);
-    font-family: 'Outfit', sans-serif;
-  }
+/* ══════════════════════════════════════════════
+   Base Styles
+══════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-@layer utilities {
-  .text-gradient {
-    background: linear-gradient(90deg, #4361ee, #3a0ca3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
+html {
+  height: 100%;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--content-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+/* ══════════════════════════════════════════════
+   Scrollbar
+══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c1cad6; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9aacbf; }
+
+/* ══════════════════════════════════════════════
+   GanttPRO Sidebar
+══════════════════════════════════════════════ */
+.gp-sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--sidebar-border);
 }
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+
+.gp-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin: 1px 8px;
+  border-radius: 6px;
+  color: var(--sidebar-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+
+.gp-nav-item:hover {
+  background: var(--sidebar-hover);
+  color: #c8d6e8;
+}
+
+.gp-nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+}
+
+/* ══════════════════════════════════════════════
+   GanttPRO Button Styles
+══════════════════════════════════════════════ */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--blue-hover);
+  box-shadow: 0 2px 8px rgba(0, 82, 204, 0.3);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #fff;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  border-color: #c1cad6;
+}
+
+/* ══════════════════════════════════════════════
+   GanttPRO Card / Panel
+══════════════════════════════════════════════ */
+.gp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ══════════════════════════════════════════════
+   GanttPRO Status / Priority Pills
+══════════════════════════════════════════════ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
   border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+
+.status-todo    { background: #f1f3f5; color: #495057; }
+.status-doing   { background: #fff8e6; color: #d97706; }
+.status-review  { background: #f3f0ff; color: #7c3aed; }
+.status-done    { background: #e6faf3; color: #059669; }
+
+/* ══════════════════════════════════════════════
+   GanttPRO Input
+══════════════════════════════════════════════ */
+.gp-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gp-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.12);
+}
+
+.gp-input::placeholder { color: var(--text-tertiary); }
+
+/* ══════════════════════════════════════════════
+   GanttPRO Select
+══════════════════════════════════════════════ */
+.gp-select {
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aacbf' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.gp-select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0,82,204,0.12);
+}
+
+/* ══════════════════════════════════════════════
+   GanttPRO Tab Bar
+══════════════════════════════════════════════ */
+.gp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.gp-tab:hover { color: var(--text-primary); border-bottom-color: #c1cad6; }
+.gp-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   GanttPRO Modal Overlay
+══════════════════════════════════════════════ */
+.gp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 43, 77, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.gp-modal {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  animation: modalIn 0.2s ease;
+}
+
+.gp-modal-lg { max-width: 680px; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ══════════════════════════════════════════════
+   Drawer
+══════════════════════════════════════════════ */
+.gp-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+}
+
+.gp-drawer-backdrop {
+  flex: 1;
+  background: rgba(23, 43, 77, 0.4);
+}
+
+.gp-drawer-panel {
+  width: 540px;
+  background: #fff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+  animation: drawerIn 0.22s ease;
+}
+
+@keyframes drawerIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════
+   GanttPRO Gantt Grid
+══════════════════════════════════════════════ */
+.gantt-row {
+  height: 40px;
+  border-bottom: 1px solid #eef0f3;
+  display: flex;
+  align-items: center;
+  transition: background 0.1s;
+}
+
+.gantt-row:hover { background: #f8f9fb; }
+
+/* ══════════════════════════════════════════════
+   GanttPRO Table
+══════════════════════════════════════════════ */
+.gp-table { width: 100%; border-collapse: collapse; }
+.gp-table th {
+  padding: 8px 12px;
+  background: #f8f9fb;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  white-space: nowrap;
+}
+.gp-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.gp-table tr:hover td { background: var(--surface-hover); cursor: pointer; }
+
+/* ══════════════════════════════════════════════
+   Animations / Transitions
+══════════════════════════════════════════════ */
+.fade-in { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ══════════════════════════════════════════════
+   Progress Bar
+══════════════════════════════════════════════ */
+.gp-progress-track {
+  height: 6px;
+  background: #e8edf3;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gp-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--blue);
+  transition: width 0.4s ease;
 }

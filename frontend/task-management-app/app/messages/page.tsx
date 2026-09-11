@@ -110,7 +110,7 @@ export default function MessagesPage() {
           <h2 className="text-xl font-bold text-slate-800">Tin nhắn</h2>
         </div>
         <div className="flex-grow overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          <p className="text-xs font-bold text-slate-400 uppercase mb-2 px-2">Kênh dự án</p>
+          <p className="text-xs font-bold text-slate-400 uppercase mb-2 px-2">Kênh DoneIt</p>
           {workspaces.map(ws => (
             <button 
               key={ws.workspaceId} 
@@ -127,7 +127,7 @@ export default function MessagesPage() {
             </button>
           ))}
           {workspaces.length === 0 && (
-            <div className="text-xs text-slate-400 p-2">Tham gia dự án để chat</div>
+            <div className="text-xs text-slate-400 p-2">Tham gia DoneIt để chat</div>
           )}
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function MessagesPage() {
           </div>
           <div>
             <h3 className="font-bold text-slate-800">{workspaces.find(w => w.workspaceId === activeWs)?.name || 'Đang tải...'}</h3>
-            <p className="text-xs text-slate-500">Kênh chat dự án</p>
+            <p className="text-xs text-slate-500">Kênh chat DoneIt</p>
           </div>
         </header>
 

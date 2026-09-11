@@ -9,7 +9,7 @@ export default function DocumentsPage() {
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Tài liệu</h2>
-          <p className="text-sm text-slate-500 font-medium">Quản lý các tệp đính kèm và tài nguyên dự án</p>
+          <p className="text-sm text-slate-500 font-medium">Quản lý các tệp đính kèm và tài nguyên DoneIt</p>
         </div>
       </header>
 

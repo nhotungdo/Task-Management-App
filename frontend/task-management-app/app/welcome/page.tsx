@@ -1,204 +1,285 @@
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
 import Link from "next/link";
-import { 
-  CheckCircle2, 
-  BarChart3, 
-  MessageCircle, 
-  LayoutGrid, 
-  ChevronRight,
-  ShieldCheck,
-  Zap,
-  Users
+import {
+  BarChart2, GitBranch, LayoutGrid, Users, CheckCircle,
+  ArrowRight, Clock, Layers, Shield, Zap, Globe
 } from "lucide-react";
+
+const FEATURES = [
+  {
+    icon: BarChart2,
+    title: "Gantt Chart nâng cao",
+    desc: "Trực quan hóa tiến độ dự án với thanh Gantt tương tác, hỗ trợ phụ thuộc và kéo thả.",
+    color: "#0052cc",
+    bg: "#e6f0ff",
+  },
+  {
+    icon: LayoutGrid,
+    title: "Kanban Board",
+    desc: "Quản lý luồng công việc trực quan với bảng Kanban hỗ trợ kéo thả linh hoạt.",
+    color: "#059669",
+    bg: "#e6faf3",
+  },
+  {
+    icon: Clock,
+    title: "Time Tracking",
+    desc: "Theo dõi thời gian làm việc thực tế so với ước tính, báo cáo theo nhóm và cá nhân.",
+    color: "#d97706",
+    bg: "#fff8e6",
+  },
+  {
+    icon: GitBranch,
+    title: "Task Dependencies",
+    desc: "Thiết lập quan hệ phụ thuộc FS/SS/FF/SF giữa các task, tự động phát hiện vòng lặp.",
+    color: "#7c3aed",
+    bg: "#f3f0ff",
+  },
+  {
+    icon: Users,
+    title: "Quản lý nhóm",
+    desc: "Phân công task, theo dõi workload, xem báo cáo năng suất từng thành viên.",
+    color: "#dc2626",
+    bg: "#fff1f0",
+  },
+  {
+    icon: Globe,
+    title: "Cộng tác thời gian thực",
+    desc: "Cập nhật tức thì qua SignalR, bình luận, chat nhóm ngay trên giao diện dự án.",
+    color: "#0891b2",
+    bg: "#e0f7fa",
+  },
+];
+
+const STATS = [
+  { value: "2,000+", label: "Đội nhóm đang dùng" },
+  { value: "50K+", label: "Task hoàn thành / tháng" },
+  { value: "99.9%", label: "Uptime đảm bảo" },
+  { value: "4.9★", label: "Đánh giá người dùng" },
+];
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen bg-white font-sans overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900">
-      
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-slate-100 transition-all">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center">
-              <CheckCircle2 size={18} className="text-white" />
-            </div>
-            <span className="text-xl font-black tracking-tight text-slate-900">DoneIt<span className="text-indigo-600">.</span></span>
-          </div>
+    <div style={{ minHeight: "100vh", fontFamily: "'Inter', sans-serif", background: "#fff", color: "#172b4d", overflowX: "hidden" }}>
+
+      {/* ── Navigation ── */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid #e2e8f0", zIndex: 100 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-            <a href="#features" className="hover:text-indigo-600 transition-colors">Tính năng</a>
-            <a href="#solutions" className="hover:text-indigo-600 transition-colors">Giải pháp</a>
-            <a href="#pricing" className="hover:text-indigo-600 transition-colors">Bảng giá</a>
+          <Link href="/welcome" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <div style={{ width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg, #0052cc, #0073e6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Layers size={16} color="#fff" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: 17, fontWeight: 800, color: "#172b4d", letterSpacing: "-0.03em" }}>
+              DoneIt<span style={{ color: "#0052cc" }}>.</span>
+            </span>
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 14, fontWeight: 500, color: "#5e6c84" }}>
+            <a href="#features" style={{ color: "#5e6c84", textDecoration: "none" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#0052cc")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#5e6c84")}>Tính năng</a>
+            <a href="#solutions" style={{ color: "#5e6c84", textDecoration: "none" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#0052cc")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#5e6c84")}>Giải pháp</a>
+            <a href="#pricing" style={{ color: "#5e6c84", textDecoration: "none" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#0052cc")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#5e6c84")}>Bảng giá</a>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-bold text-slate-700 hover:text-indigo-600 transition-colors hidden sm:block">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/login" style={{ padding: "7px 16px", fontSize: 14, fontWeight: 600, color: "#172b4d", textDecoration: "none", borderRadius: 4 }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
               Đăng nhập
             </Link>
-            <Link href="/register" className="px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-full hover:bg-slate-800 transition-all hover:shadow-lg hover:shadow-slate-900/20 active:scale-95">
+            <Link href="/register" style={{ padding: "7px 16px", fontSize: 14, fontWeight: 600, color: "#fff", background: "#0052cc", borderRadius: 4, textDecoration: "none", transition: "background 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#0047b3")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#0052cc")}>
               Bắt đầu miễn phí
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-40 pb-20 px-6 relative">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-white to-white"></div>
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          
-          <div className="flex-1 text-center lg:text-left z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-bold mb-6">
-              <Zap size={14} /> Phiên bản 2.0 đã ra mắt
+      {/* ── Hero ── */}
+      <section style={{ paddingTop: 120, paddingBottom: 80, background: "linear-gradient(180deg, #f8faff 0%, #fff 100%)", position: "relative", overflow: "hidden" }}>
+        {/* BG decoration */}
+        <div style={{ position: "absolute", top: 0, right: 0, width: 600, height: 600, background: "radial-gradient(circle at 60% 20%, rgba(0,82,204,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
+
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "#e6f0ff", borderRadius: 4, marginBottom: 20 }}>
+              <Zap size={12} color="#0052cc" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0052cc" }}>Phiên bản 2.0 — Gantt Chart Pro</span>
             </div>
-            <h1 className="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
-              Quản lý dự án <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-500">
-                thông minh hơn.
-              </span>
+
+            <h1 style={{ fontSize: 44, fontWeight: 900, color: "#172b4d", lineHeight: 1.15, marginBottom: 18, letterSpacing: "-0.03em" }}>
+              Phần mềm quản lý<br />
+              dự án <span style={{ color: "#0052cc" }}>chuyên nghiệp</span>
             </h1>
-            <p className="text-lg text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              Kiểm soát tiến độ, phân công công việc và kết nối đội ngũ của bạn theo thời gian thực. Tất cả trên một nền tảng duy nhất, thiết kế tối giản và sức mạnh vượt trội.
+
+            <p style={{ fontSize: 16, color: "#5e6c84", lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
+              Gantt Chart tương tác, Kanban kéo thả, theo dõi thời gian và cộng tác thời gian thực — tất cả trong một nền tảng duy nhất.
             </p>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-              <Link href="/register" className="px-8 py-4 bg-indigo-600 text-white text-base font-bold rounded-full hover:bg-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-600/30 flex items-center gap-2 active:scale-95 w-full sm:w-auto justify-center">
-                Tạo tài khoản miễn phí <ChevronRight size={18} />
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 24px", background: "#0052cc", color: "#fff", borderRadius: 4, fontSize: 15, fontWeight: 700, textDecoration: "none", transition: "background 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#0047b3")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#0052cc")}>
+                Dùng thử miễn phí <ArrowRight size={16} />
               </Link>
-              <span className="text-sm text-slate-500 font-medium">Không cần thẻ tín dụng</span>
+              <span style={{ fontSize: 13, color: "#97a0af" }}>Không cần thẻ tín dụng</span>
             </div>
-          </div>
-          
-          <div className="flex-1 relative w-full max-w-2xl lg:max-w-none">
-            {/* Decorative background blobs */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-violet-200/40 to-indigo-200/40 blur-3xl rounded-full -z-10"></div>
-            
-            {/* Dashboard Mockup Image */}
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-indigo-900/10 border border-white/50 backdrop-blur-sm bg-white/40 p-2 transform transition-transform hover:-translate-y-2 duration-700">
-              <img src="/hero-mockup.png" alt="DoneIt Dashboard Preview" className="w-full h-auto rounded-2xl border border-slate-100" />
+
+            {/* Trust badges */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 28 }}>
+              <Shield size={14} color="#059669" />
+              <span style={{ fontSize: 12, color: "#5e6c84" }}>SSL bảo mật • JWT Auth • Dữ liệu được mã hóa</span>
             </div>
           </div>
 
-        </div>
-      </section>
+          {/* App Mockup */}
+          <div style={{ position: "relative" }}>
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, boxShadow: "0 20px 60px rgba(0,0,0,0.12)", overflow: "hidden" }}>
+              {/* Mock top bar */}
+              <div style={{ height: 40, background: "#1e2a3b", display: "flex", alignItems: "center", padding: "0 16px", gap: 8 }}>
+                {["#ff5f57","#febc2e","#28c840"].map((c,i) => (
+                  <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+                ))}
+                <div style={{ flex: 1, height: 20, marginLeft: 12, background: "rgba(255,255,255,0.08)", borderRadius: 4 }} />
+              </div>
+              {/* Mock app body */}
+              <div style={{ display: "flex" }}>
+                {/* Mock sidebar */}
+                <div style={{ width: 160, background: "#1e2a3b", padding: "12px 0", minHeight: 280 }}>
+                  {["Tổng quan","Dự án","My Tasks","Gantt","Báo cáo"].map((item, i) => (
+                    <div key={item} style={{ padding: "7px 16px", fontSize: 11, color: i === 2 ? "#fff" : "#6b85a3", background: i === 2 ? "#0052cc" : "transparent", margin: "1px 8px", borderRadius: 4 }}>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                {/* Mock content */}
+                <div style={{ flex: 1, padding: 14, background: "#f8f9fb" }}>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { color: "#0052cc", w: "45%" },
+                      { color: "#10b981", w: "28%" },
+                      { color: "#f59e0b", w: "60%" },
+                    ].map((bar, i) => (
+                      <div key={i} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: "8px 10px", flex: 1 }}>
+                        <div style={{ height: 3, background: bar.color, borderRadius: 2, width: bar.w, marginBottom: 6 }} />
+                        <div style={{ height: 6, background: "#f1f5f9", borderRadius: 2, marginBottom: 4 }} />
+                        <div style={{ height: 6, background: "#f1f5f9", borderRadius: 2, width: "70%" }} />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Gantt mock */}
+                  {[0.7, 0.4, 0.9, 0.55, 0.3].map((w, i) => (
+                    <div key={i} style={{ height: 26, marginBottom: 3, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 60, height: 8, background: "#e2e8f0", borderRadius: 2 }} />
+                      <div style={{ flex: 1, height: 12, background: "#e8edf3", borderRadius: 2, position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", left: `${i*8}%`, width: `${w*60}%`, height: "100%", background: ["#0052cc","#10b981","#f59e0b","#7c3aed","#dc2626"][i], borderRadius: 2, opacity: 0.8 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-      {/* Trusted By Section */}
-      <section className="py-10 border-y border-slate-100 bg-slate-50/50">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-wider">Được tin dùng bởi các đội ngũ hàng đầu</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale">
-            {/* Placeholder company logos (text for now) */}
-            <h3 className="text-xl font-black font-serif">Acme Corp</h3>
-            <h3 className="text-xl font-black tracking-tighter">GLOBAL<span className="font-light">SYS</span></h3>
-            <h3 className="text-xl font-black italic">NextGen</h3>
-            <h3 className="text-xl font-bold uppercase tracking-widest">Stratos</h3>
-            <h3 className="text-xl font-black text-slate-800">Tech<span className="text-indigo-600">Nova</span></h3>
+            {/* Floating badge */}
+            <div style={{ position: "absolute", bottom: -16, left: -16, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#e6faf3", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CheckCircle size={18} color="#059669" />
+              </div>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#172b4d", margin: 0 }}>3 task hoàn thành</p>
+                <p style={{ fontSize: 11, color: "#5e6c84", margin: 0 }}>Hôm nay, 09:30 AM</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-4xl font-black text-slate-900 mb-6">Tại sao chọn DoneIt?</h2>
-            <p className="text-lg text-slate-600 font-medium leading-relaxed">
-              Khác với những phần mềm cồng kềnh, DoneIt tập trung vào trải nghiệm cốt lõi: Nhanh chóng, trực quan và luôn cập nhật theo thời gian thực (Real-time).
+      {/* ── Stats ── */}
+      <section style={{ background: "#1e2a3b", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          {STATS.map(s => (
+            <div key={s.label} style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 32, fontWeight: 900, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.03em" }}>{s.value}</p>
+              <p style={{ fontSize: 13, color: "#6b85a3", margin: 0 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section id="features" style={{ padding: "80px 24px", background: "#fff" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{ display: "inline-block", padding: "3px 10px", background: "#e6f0ff", borderRadius: 4, fontSize: 12, fontWeight: 700, color: "#0052cc", marginBottom: 16 }}>
+              Tính năng
+            </div>
+            <h2 style={{ fontSize: 36, fontWeight: 800, color: "#172b4d", marginBottom: 12, letterSpacing: "-0.02em" }}>Mọi thứ bạn cần</h2>
+            <p style={{ fontSize: 16, color: "#5e6c84", maxWidth: 560, margin: "0 auto" }}>
+              Một nền tảng đầy đủ tính năng để quản lý dự án từ lập kế hoạch đến hoàn thành.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:border-indigo-100 transition-colors group">
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                <LayoutGrid size={28} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {FEATURES.map(f => (
+              <div key={f.title} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "20px 22px", transition: "box-shadow 0.2s, border-color 0.2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,82,204,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "#0052cc50"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  <f.icon size={20} color={f.color} />
+                </div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#172b4d", marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: "#5e6c84", lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Kanban Kéo Thả</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Di chuyển công việc linh hoạt qua các trạng thái bằng thao tác vuốt kéo (Drag & Drop) siêu mượt. Lưu trạng thái ngay tức thì.
-              </p>
-            </div>
-
-            <div className="bg-indigo-50 rounded-3xl p-8 border border-indigo-100 hover:border-indigo-200 transition-colors group">
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                <MessageCircle size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Chat Real-time (SignalR)</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Trao đổi công việc trực tiếp không độ trễ. Nhắn tin đến đâu, nổi lên màn hình đến đó mà không cần tải lại trang.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:border-indigo-100 transition-colors group">
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
-                <BarChart3 size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Thống kê đa chiều</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Nắm bắt ngay lập tức 100% dữ liệu tiến độ, nhân sự thông qua các Dashboard Chart tương tác hiện đại.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Split Feature Section (GanttPRO style) */}
-      <section className="py-24 px-6 bg-slate-900 text-white overflow-hidden">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1">
-            <h2 className="text-4xl font-black mb-6 leading-tight">Mọi dự án nằm gọn<br/>trong một màn hình.</h2>
-            <p className="text-slate-400 text-lg mb-8 font-medium leading-relaxed">
-              Bạn không cần phải chuyển đổi qua lại giữa hàng tá ứng dụng. 
-              Từ lịch làm việc (Calendar), theo dõi tiến trình cho đến họp nhóm, DoneIt gộp tất cả lại với thiết kế thanh lịch tối đa.
-            </p>
-            <ul className="space-y-4 mb-8">
-              <li className="flex items-center gap-3 text-slate-300 font-medium">
-                <ShieldCheck className="text-indigo-400" size={24} /> Bảo mật dữ liệu tuyệt đối (JWT Auth).
-              </li>
-              <li className="flex items-center gap-3 text-slate-300 font-medium">
-                <Users className="text-indigo-400" size={24} /> Phân quyền linh hoạt theo Workspace.
-              </li>
-            </ul>
-            <Link href="/register" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 text-base font-bold rounded-full hover:bg-indigo-50 transition-colors">
-              Khám phá ngay <ChevronRight size={18} />
+      {/* ── CTA ── */}
+      <section id="pricing" style={{ background: "#f4f5f7", padding: "80px 24px", textAlign: "center" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+          <h2 style={{ fontSize: 36, fontWeight: 800, color: "#172b4d", marginBottom: 12, letterSpacing: "-0.02em" }}>
+            Sẵn sàng bắt đầu?
+          </h2>
+          <p style={{ fontSize: 16, color: "#5e6c84", marginBottom: 32 }}>
+            Tạo tài khoản miễn phí ngay hôm nay. Không cần thẻ tín dụng.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", background: "#0052cc", color: "#fff", borderRadius: 4, fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
+              Bắt đầu miễn phí <ArrowRight size={16} />
+            </Link>
+            <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", background: "#fff", color: "#172b4d", border: "1px solid #e2e8f0", borderRadius: 4, fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
+              Đăng nhập
             </Link>
           </div>
-          <div className="flex-1 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 blur-3xl opacity-30 rounded-full"></div>
-            {/* Using the same mockup for visual weight */}
-            <img src="/hero-mockup.png" alt="DoneIt System" className="relative rounded-2xl shadow-2xl border border-slate-700/50 -rotate-2 hover:rotate-0 transition-transform duration-700" />
-          </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-6 bg-white text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-6">Sẵn sàng để tăng tốc?</h2>
-          <p className="text-lg text-slate-600 mb-10 font-medium">
-            Hàng ngàn đội ngũ đã tiết kiệm được hàng trăm giờ làm việc mỗi tháng. Bây giờ đến lượt bạn.
-          </p>
-          <Link href="/register" className="px-10 py-5 bg-indigo-600 text-white text-lg font-bold rounded-full hover:bg-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-600/30 inline-block active:scale-95">
-            Bắt đầu miễn phí ngay hôm nay
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-50 border-t border-slate-200 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <CheckCircle2 size={12} className="text-white" />
+      {/* ── Footer ── */}
+      <footer style={{ background: "#1e2a3b", padding: "24px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 6, background: "linear-gradient(135deg, #0052cc, #0073e6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Layers size={13} color="#fff" strokeWidth={2.5} />
             </div>
-            <span className="text-lg font-black text-slate-900">DoneIt<span className="text-indigo-600">.</span></span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>DoneIt<span style={{ color: "#4da6ff" }}>.</span></span>
           </div>
-          <p className="text-slate-500 text-sm font-medium">
-            © {new Date().getFullYear()} DoneIt Inc. Bản quyền thuộc về bạn.
+          <p style={{ fontSize: 12, color: "#6b85a3", margin: 0 }}>
+            © {new Date().getFullYear()} DoneIt. Phần mềm quản lý dự án hiện đại.
           </p>
+          <div style={{ display: "flex", gap: 20, fontSize: 12, color: "#6b85a3" }}>
+            <a href="#" style={{ color: "#6b85a3", textDecoration: "none" }}>Điều khoản</a>
+            <a href="#" style={{ color: "#6b85a3", textDecoration: "none" }}>Bảo mật</a>
+            <a href="#" style={{ color: "#6b85a3", textDecoration: "none" }}>Liên hệ</a>
+          </div>
         </div>
       </footer>
-
     </div>
   );
 }

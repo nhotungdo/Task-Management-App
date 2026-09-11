@@ -19,10 +19,16 @@ public partial class TaskManagementAppContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     
-    // New Entities
+    // Workspace & Members
     public virtual DbSet<Workspace> Workspaces { get; set; }
     public virtual DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
     public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+
+    // Phase 1 — New Entities
+    public virtual DbSet<TaskDependency> TaskDependencies { get; set; }
+    public virtual DbSet<TimeLog> TimeLogs { get; set; }
+    public virtual DbSet<TaskComment> TaskComments { get; set; }
+    public virtual DbSet<TaskAttachment> TaskAttachments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -60,11 +66,16 @@ public partial class TaskManagementAppContext : DbContext
             entity.HasKey(e => e.TaskId).HasName("PK__Tasks__7C6949B1BD70F0F7"); 
             entity.Property(e => e.TaskId).HasDefaultValueSql("(newid())"); 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime"); 
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.DueDate).HasColumnType("datetime"); 
             entity.Property(e => e.Priority).HasMaxLength(50).HasDefaultValue("Normal"); 
             entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("To Do"); 
             entity.Property(e => e.Title).HasMaxLength(255); 
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime"); 
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.Progress).HasDefaultValue(0);
+            entity.Property(e => e.EstimatedHours).HasColumnType("decimal(8,2)");
+            entity.Property(e => e.ActualHours).HasColumnType("decimal(8,2)");
+            entity.Property(e => e.IsMilestone).HasDefaultValue(false);
             entity.HasOne(d => d.Owner).WithMany(p => p.Tasks).HasForeignKey(d => d.OwnerId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Tasks_Users"); 
             entity.HasOne(d => d.Workspace).WithMany(p => p.Tasks).HasForeignKey(d => d.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
         }); 
@@ -121,6 +132,92 @@ public partial class TaskManagementAppContext : DbContext
             entity.HasOne(d => d.Workspace).WithMany(p => p.ChatMessages).HasForeignKey(d => d.WorkspaceId).OnDelete(DeleteBehavior.Cascade); 
             entity.HasOne(d => d.Sender).WithMany(p => p.ChatMessages).HasForeignKey(d => d.SenderId).OnDelete(DeleteBehavior.Restrict); 
             entity.HasOne(d => d.Receiver).WithMany(p => p.ReceivedMessages).HasForeignKey(d => d.ReceiverId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ─────────────────────────────────────────────
+        // Phase 1 — New entity configurations
+        // ─────────────────────────────────────────────
+
+        modelBuilder.Entity<TaskDependency>(entity =>
+        {
+            entity.HasKey(e => e.TaskDependencyId);
+            entity.Property(e => e.TaskDependencyId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Type).HasMaxLength(2).HasDefaultValue("FS");
+            entity.Property(e => e.LagDays).HasDefaultValue(0);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            // Self-referencing via Task
+            entity.HasOne(d => d.PredecessorTask)
+                .WithMany(t => t.Predecessors)
+                .HasForeignKey(d => d.PredecessorTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.SuccessorTask)
+                .WithMany(t => t.Successors)
+                .HasForeignKey(d => d.SuccessorTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prevent duplicate dependency pairs
+            entity.HasIndex(e => new { e.PredecessorTaskId, e.SuccessorTaskId }).IsUnique();
+        });
+
+        modelBuilder.Entity<TimeLog>(entity =>
+        {
+            entity.HasKey(e => e.TimeLogId);
+            entity.Property(e => e.TimeLogId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Hours).HasColumnType("decimal(8,2)");
+            entity.Property(e => e.LogDate).HasColumnType("date");
+            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany(t => t.TimeLogs)
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.TimeLogs)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskComment>(entity =>
+        {
+            entity.HasKey(e => e.TaskCommentId);
+            entity.Property(e => e.TaskCommentId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Content).HasMaxLength(4000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany(t => t.Comments)
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.TaskComments)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TaskAttachment>(entity =>
+        {
+            entity.HasKey(e => e.TaskAttachmentId);
+            entity.Property(e => e.TaskAttachmentId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FileUrl).HasMaxLength(2000);
+            entity.Property(e => e.ContentType).HasMaxLength(100);
+            entity.Property(e => e.UploadedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.TaskAttachments)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder); 
