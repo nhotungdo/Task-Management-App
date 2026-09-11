@@ -97,8 +97,8 @@ export default function MessagesPage() {
       await api.post("/chat", { workspaceId: activeWs, content: input });
       setInput("");
       // No need to call fetchMessages(), SignalR will push the new message
-    } catch {
-      console.error("Failed to send message");
+    } catch (err: unknown) {
+      console.error("Failed to send message", (err as { response?: { data?: unknown } })?.response?.data || err);
     }
   };
 

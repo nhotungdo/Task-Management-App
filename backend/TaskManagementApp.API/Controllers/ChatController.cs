@@ -87,7 +87,12 @@ public class ChatController : ControllerBase
         return Ok(messages);
     }
 
-    public record SendMessageRequest(Guid? WorkspaceId, Guid? ReceiverId, string Content);
+    public class SendMessageRequest
+    {
+        public Guid? WorkspaceId { get; set; }
+        public Guid? ReceiverId { get; set; }
+        public string Content { get; set; } = string.Empty;
+    }
 
     [HttpPost("chat")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
