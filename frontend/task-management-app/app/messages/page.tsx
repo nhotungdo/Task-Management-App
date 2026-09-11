@@ -5,10 +5,22 @@ import { Send, Building, MessageCircle } from "lucide-react";
 import api from "@/lib/api";
 import * as signalR from "@microsoft/signalr";
 
+interface Workspace {
+  workspaceId: string;
+  name: string;
+}
+
+interface Message {
+  messageId: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+}
+
 export default function MessagesPage() {
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWs, setActiveWs] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
@@ -59,9 +71,16 @@ export default function MessagesPage() {
         connectionRef.current.stop();
       }
     };
-  }, []); // Run once on mount
+  }, [activeWs]);
 
   useEffect(() => {
+    const fetchMessages = () => {
+      if (!activeWs) return;
+      api.get(`/workspaces/${activeWs}/chat`)
+         .then(res => setMessages(res.data))
+         .catch(console.error);
+    };
+
     if (activeWs) {
       fetchMessages();
       
@@ -71,13 +90,6 @@ export default function MessagesPage() {
     }
   }, [activeWs]);
 
-  const fetchMessages = () => {
-    if (!activeWs) return;
-    api.get(`/workspaces/${activeWs}/chat`)
-       .then(res => setMessages(res.data))
-       .catch(console.error);
-  };
-
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !activeWs) return;
@@ -85,7 +97,7 @@ export default function MessagesPage() {
       await api.post("/chat", { workspaceId: activeWs, content: input });
       setInput("");
       // No need to call fetchMessages(), SignalR will push the new message
-    } catch (err) {
+    } catch {
       console.error("Failed to send message");
     }
   };

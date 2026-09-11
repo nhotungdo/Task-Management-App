@@ -4,10 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
   BarChart3, LayoutGrid, Calendar as CalendarIcon, 
-  List, GitCommit, MoreVertical, Plus, CheckCircle2,
-  X, Users, AlertTriangle, Sparkles, ShieldAlert, Loader2
+  List, GitCommit, MoreVertical, Plus,
+  X, Users, AlertTriangle, ShieldAlert, Loader2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import api from "@/lib/api";
+import { 
+  format, addMonths, subMonths, startOfMonth, endOfMonth, 
+  startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval 
+} from "date-fns";
 
 interface Task {
   taskId: string;
@@ -38,9 +42,16 @@ export default function WorkspaceDetail() {
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
 
+  // Calendar State
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const handleToday = () => setCurrentDate(new Date());
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "" });
+  const [newTask, setNewTask] = useState({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "" });
 
   // AI Risk State
   const [isAiRiskModalOpen, setIsAiRiskModalOpen] = useState(false);
@@ -50,8 +61,10 @@ export default function WorkspaceDetail() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && tab !== activeTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tab);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleTabChange = (tab: string) => {
@@ -63,11 +76,11 @@ export default function WorkspaceDetail() {
     setLoading(true);
     try {
       let usersData;
-      try { usersData = (await api.get("/Users")).data; } catch (e) {}
+      try { usersData = (await api.get("/Users")).data; } catch {}
 
       const uMap: Record<string, string> = {};
       if (usersData) {
-        usersData.forEach((u: any) => { uMap[u.userId] = u.fullName || u.email; });
+        usersData.forEach((u: {userId: string, fullName?: string, email: string}) => { uMap[u.userId] = u.fullName || u.email; });
       }
       setUsersMap(uMap);
 
@@ -77,7 +90,7 @@ export default function WorkspaceDetail() {
       ]);
       setWorkspace(wsRes.data);
       setTasks(taskRes.data.items || []);
-    } catch (err) {
+    } catch {
       console.error("Failed to load workspace data");
     } finally {
       setLoading(false);
@@ -86,8 +99,10 @@ export default function WorkspaceDetail() {
 
   useEffect(() => {
     if (workspaceId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
 
   // Drag and Drop Handlers for Kanban
@@ -105,7 +120,7 @@ export default function WorkspaceDetail() {
     setTasks(prev => prev.map(t => t.taskId === taskId ? { ...t, status: newStatus } : t));
     try {
       await api.put(`/Tasks/${taskId}`, { ...taskToUpdate, status: newStatus });
-    } catch (err) {
+    } catch {
       loadData(); 
     }
   };
@@ -121,12 +136,13 @@ export default function WorkspaceDetail() {
         workspaceId: workspaceId,
         status: newTask.status,
         priority: newTask.priority,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
+        ownerId: newTask.ownerId || null
       });
       setIsModalOpen(false);
-      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "" });
+      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "" });
       loadData();
-    } catch (err) {
+    } catch {
       console.error("Failed to create task");
     }
   };
@@ -292,7 +308,7 @@ export default function WorkspaceDetail() {
                     ))}
                   </div>
                   {/* Task Bars */}
-                  {tasks.map((t, idx) => {
+                  {tasks.map((t) => {
                     const startDay = new Date(t.createdAt).getDate();
                     const endDay = t.dueDate ? new Date(t.dueDate).getDate() : startDay + 2; // Default to 3 days if no due date
                     const validEndDay = Math.min(Math.max(endDay, startDay), daysInMonth);
@@ -320,34 +336,115 @@ export default function WorkspaceDetail() {
 
         {/* CALENDAR */}
         {activeTab === 'calendar' && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full">
-            <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
-              <h3 className="font-bold text-slate-800">Tháng {currentMonth + 1}/{currentYear}</h3>
+          <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-100/50 flex flex-col h-full ring-1 ring-slate-100">
+            {/* Premium Header */}
+            <div className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+                    <CalendarIcon size={20} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-800 text-xl capitalize tracking-tight">
+                      Tháng {currentDate.getMonth() + 1}
+                    </h3>
+                    <p className="text-xs font-bold text-slate-400">Năm {currentDate.getFullYear()}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={handleToday} className="px-5 py-2.5 bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 text-sm font-bold text-slate-700 rounded-xl transition-all active:scale-95">
+                  Hôm nay
+                </button>
+                <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm p-1 gap-1">
+                  <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors active:scale-95"><ChevronLeft size={18} className="stroke-[2.5]"/></button>
+                  <button onClick={handleNextMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors active:scale-95"><ChevronRight size={18} className="stroke-[2.5]"/></button>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 shrink-0">
-              {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(day => (
-                <div key={day} className="py-2 text-center text-xs font-bold text-slate-500 border-r border-slate-200 last:border-0">{day}</div>
+
+            {/* Days of Week Header */}
+            <div className="grid grid-cols-7 border-b border-slate-200/60 bg-white/50 shrink-0">
+              {['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'].map(day => (
+                <div key={day} className="py-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{day}</div>
               ))}
             </div>
-            <div className="flex-1 grid grid-cols-7 grid-rows-5 bg-slate-100 gap-[1px]">
-              {/* Just generate 35 boxes for simplicity */}
-              {Array.from({length: 35}).map((_, i) => {
-                const dayNum = i - new Date(currentYear, currentMonth, 1).getDay() + 1;
-                const isCurrentMonth = dayNum > 0 && dayNum <= daysInMonth;
-                const dailyTasks = isCurrentMonth ? tasks.filter(t => t.dueDate && new Date(t.dueDate).getDate() === dayNum) : [];
-                return (
-                  <div key={i} className={`bg-white p-2 flex flex-col min-h-[100px] ${!isCurrentMonth ? 'opacity-50 bg-slate-50' : ''}`}>
-                    <span className="text-xs font-bold text-slate-400 mb-1">{isCurrentMonth ? dayNum : ''}</span>
-                    <div className="flex-1 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
-                      {dailyTasks.map(t => (
-                        <div key={t.taskId} className="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-1 rounded truncate cursor-pointer hover:bg-indigo-100" title={t.title}>
-                          {t.title}
-                        </div>
-                      ))}
+
+            {/* Calendar Grid */}
+            <div className="flex-1 grid grid-cols-7 auto-rows-fr bg-slate-100/50 gap-[1px] p-[1px]">
+              {(() => {
+                const monthStart = startOfMonth(currentDate);
+                const monthEnd = endOfMonth(monthStart);
+                const startDate = startOfWeek(monthStart);
+                const endDate = endOfWeek(monthEnd);
+                const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+                return days.map((day) => {
+                  const isCurrentMonth = isSameMonth(day, monthStart);
+                  const isToday = isSameDay(day, new Date());
+                  const dailyTasks = tasks.filter(t => t.dueDate && isSameDay(new Date(t.dueDate), day));
+                  
+                  return (
+                    <div 
+                      key={day.toISOString()} 
+                      className={`relative bg-white p-3 flex flex-col min-h-[120px] transition-all cursor-pointer group
+                        ${!isCurrentMonth ? 'bg-slate-50/50' : 'hover:bg-indigo-50/30'}`}
+                      onClick={() => {
+                        setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: format(day, 'yyyy-MM-dd'), ownerId: "" });
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      {/* Day Number Header */}
+                      <div className="flex justify-between items-start mb-2 relative z-10">
+                        <span className={`text-sm font-bold flex items-center justify-center w-8 h-8 rounded-full transition-all
+                          ${isToday ? 'bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-200' 
+                                    : isCurrentMonth ? 'text-slate-700 group-hover:text-indigo-600 group-hover:bg-indigo-100' 
+                                                     : 'text-slate-300'}`}>
+                          {day.getDate()}
+                        </span>
+                        
+                        {/* Task Count Indicator for hover */}
+                        {dailyTasks.length > 0 && (
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm">
+                            {dailyTasks.length} việc
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Tasks Container */}
+                      <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 relative z-10">
+                        {dailyTasks.map(t => {
+                          const statusStyles = t.status === 'Done' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60 hover:bg-emerald-100/80 hover:border-emerald-300' : 
+                                             t.status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200/60 hover:bg-amber-100/80 hover:border-amber-300' : 
+                                             'bg-blue-50 text-blue-700 border-blue-200/60 hover:bg-blue-100/80 hover:border-blue-300';
+                          return (
+                            <div 
+                              key={t.taskId} 
+                              className={`border text-xs font-semibold px-2 py-1.5 rounded-lg truncate shadow-sm transition-all duration-200 ${statusStyles}`}
+                              title={t.title}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // future: open edit modal
+                              }}
+                            >
+                              {t.title}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Plus icon on hover for empty days */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-0">
+                        {dailyTasks.length === 0 && (
+                           <div className="w-10 h-10 rounded-full bg-white text-indigo-400 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform duration-300 shadow-sm border border-indigo-100">
+                             <Plus size={20} className="stroke-[3]" />
+                           </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         )}
@@ -360,7 +457,7 @@ export default function WorkspaceDetail() {
               <p className="text-sm text-slate-500 mb-8">Theo dõi khối lượng công việc của từng thành viên trong dự án để phân bổ nguồn lực hợp lý.</p>
               
               <div className="space-y-6">
-                {workloadArray.map((w, idx) => {
+                {workloadArray.map((w) => {
                   const isOverloaded = w.count > 5 || w.high > 2; // Arbitrary logic for MVP
                   return (
                     <div key={w.ownerId} className="flex flex-col gap-2">
@@ -503,6 +600,23 @@ export default function WorkspaceDetail() {
                     <option value="High">Cao</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Người nhận</label>
+                <select 
+                  value={newTask.ownerId}
+                  onChange={(e) => setNewTask({...newTask, ownerId: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
+                >
+                  <option value="">Chưa giao</option>
+                  {Object.entries(usersMap).map(([id, name]) => (
+                    <option key={id} value={id}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Ngày đến hạn</label>
+                <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" />
               </div>
               <div className="pt-4 flex gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors">Hủy</button>

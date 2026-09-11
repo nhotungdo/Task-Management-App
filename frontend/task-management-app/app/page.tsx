@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { 
   Search, Filter, Plus, Bell, MessageSquare, Settings, 
   MoreVertical, Calendar, Clock, BarChart3, ChevronDown, CheckCircle2, X
 } from "lucide-react";
+import { isToday, isAfter, startOfDay } from "date-fns";
 import { Doughnut, Bar, Line } from "react-chartjs-2";
 import { 
   Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement
@@ -35,10 +38,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "" });
+  const [newTask, setNewTask] = useState({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "", workspaceId: "" });
 
   useEffect(() => {
     const fetchInitData = async () => {
@@ -127,18 +131,20 @@ export default function Dashboard() {
   // Create Task
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeWorkspaceId || !newTask.title.trim()) return;
+    const targetWorkspace = newTask.workspaceId || activeWorkspaceId;
+    if (!targetWorkspace || !newTask.title.trim()) return;
     try {
       await api.post("/Tasks", {
         title: newTask.title,
         description: newTask.description,
-        workspaceId: activeWorkspaceId,
+        workspaceId: targetWorkspace,
         status: newTask.status,
         priority: newTask.priority,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
+        ownerId: newTask.ownerId || null
       });
       setIsModalOpen(false);
-      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "" });
+      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "", workspaceId: "" });
       fetchTasks();
     } catch (err) {
       console.error("Failed to create task");
@@ -150,12 +156,17 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
-  const todoTasks = tasks.filter(t => t.status === "To Do");
-  const inProgressTasks = tasks.filter(t => t.status === "In Progress");
-  const inReviewTasks = tasks.filter(t => t.status === "In Review");
-  const doneTasks = tasks.filter(t => t.status === "Done");
+  const filteredTasks = tasks.filter(t => 
+    t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (t.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const totalTasks = tasks.length;
+  const todoTasks = filteredTasks.filter(t => t.status === "To Do");
+  const inProgressTasks = filteredTasks.filter(t => t.status === "In Progress");
+  const inReviewTasks = filteredTasks.filter(t => t.status === "In Review");
+  const doneTasks = filteredTasks.filter(t => t.status === "Done");
+
+  const totalTasks = filteredTasks.length;
   const completedTasks = doneTasks.length;
   const inProgressCount = inProgressTasks.length;
 
@@ -170,13 +181,13 @@ export default function Dashboard() {
   };
 
   const priorityData = {
-    high: tasks.filter(t => t.priority === "High").length,
-    medium: tasks.filter(t => t.priority === "Medium").length,
-    low: tasks.filter(t => t.priority === "Low").length,
+    high: filteredTasks.filter(t => t.priority === "High").length,
+    medium: filteredTasks.filter(t => t.priority === "Medium").length,
+    low: filteredTasks.filter(t => t.priority === "Low").length,
   };
 
   const workloadMap: Record<string, number> = {};
-  tasks.forEach(t => {
+  filteredTasks.forEach(t => {
     if (t.ownerId) {
       workloadMap[t.ownerId] = (workloadMap[t.ownerId] || 0) + 1;
     }
@@ -215,7 +226,9 @@ export default function Dashboard() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Tìm kiếm..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm công việc..." 
               className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm focus:outline-none focus:border-blue-500 w-[300px]"
             />
           </div>
@@ -465,7 +478,7 @@ export default function Dashboard() {
               <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-bold text-sm text-slate-800">Dòng thời gian (Hoạt động)</h4>
-                  <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
+                  <Link href="/messages" className="text-xs font-bold text-blue-600">Xem tất cả</Link>
                 </div>
                 <div className="space-y-4">
                   {notifications.length > 0 ? notifications.slice(0, 5).map((n, idx) => {
@@ -524,10 +537,10 @@ export default function Dashboard() {
             <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="font-bold text-sm text-slate-800">Việc hôm nay</h4>
-                <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
+                <Link href="/tasks" className="text-xs font-bold text-blue-600">Xem tất cả</Link>
               </div>
               <div className="space-y-3">
-                {tasks.slice(0, 5).map((t, idx) => {
+                {filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate))).slice(0, 5).map((t, idx) => {
                   const d = t.dueDate ? new Date(t.dueDate) : null;
                   return (
                     <div key={t.taskId || idx} className="flex items-center justify-between group">
@@ -545,7 +558,7 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
-                {tasks.length === 0 && <div className="text-xs text-slate-500">Không có việc</div>}
+                {filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate))).length === 0 && <div className="text-xs text-slate-500">Không có việc hôm nay</div>}
               </div>
             </div>
 
@@ -553,10 +566,10 @@ export default function Dashboard() {
             <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="font-bold text-sm text-slate-800">Sắp tới</h4>
-                <a href="#" className="text-xs font-bold text-blue-600">Xem tất cả</a>
+                <Link href="/calendar" className="text-xs font-bold text-blue-600">Xem tất cả</Link>
               </div>
               <div className="space-y-3">
-                {tasks.filter(t => t.status !== 'Done').slice(0, 4).map((t, idx) => {
+                {filteredTasks.filter(t => t.status !== 'Done' && t.dueDate && isAfter(new Date(t.dueDate), startOfDay(new Date())) && !isToday(new Date(t.dueDate))).slice(0, 4).map((t, idx) => {
                   const d = t.dueDate ? new Date(t.dueDate) : null;
                   return (
                     <div key={t.taskId || idx} className="flex items-center justify-between">
@@ -571,7 +584,7 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
-                {tasks.filter(t => t.status !== 'Done').length === 0 && <div className="text-xs text-slate-500">Không có việc sắp tới</div>}
+                {filteredTasks.filter(t => t.status !== 'Done' && t.dueDate && isAfter(new Date(t.dueDate), startOfDay(new Date())) && !isToday(new Date(t.dueDate))).length === 0 && <div className="text-xs text-slate-500">Không có việc sắp tới</div>}
               </div>
             </div>
 
@@ -661,6 +674,33 @@ export default function Dashboard() {
                     <option value="Low">Thấp</option>
                     <option value="Medium">Trung bình</option>
                     <option value="High">Cao</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Dự án</label>
+                  <select 
+                    value={newTask.workspaceId || activeWorkspaceId || ""}
+                    onChange={(e) => setNewTask({...newTask, workspaceId: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                  >
+                    {workspaces.map(ws => (
+                      <option key={ws.workspaceId} value={ws.workspaceId}>{ws.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Người nhận</label>
+                  <select 
+                    value={newTask.ownerId}
+                    onChange={(e) => setNewTask({...newTask, ownerId: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Chưa giao</option>
+                    {Object.entries(usersMap).map(([id, name]) => (
+                      <option key={id} value={id}>{name}</option>
+                    ))}
                   </select>
                 </div>
               </div>

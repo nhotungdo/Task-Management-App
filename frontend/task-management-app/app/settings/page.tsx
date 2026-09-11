@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-location-assign-relative-destination */
 "use client";
 
 import React, { useEffect, useState } from "react";
