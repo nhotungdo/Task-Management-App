@@ -17,12 +17,14 @@ public class AuthController : ControllerBase
     private readonly TaskManagementAppContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(TaskManagementAppContext db, IPasswordHasher passwordHasher, ITokenService tokenService)
+    public AuthController(TaskManagementAppContext db, IPasswordHasher passwordHasher, ITokenService tokenService, IConfiguration configuration)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _configuration = configuration;
     }
 
     public record RegisterRequest(string Email, string Password, string? FullName);
@@ -35,8 +37,11 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // TODO: In production, add your ClientId to ValidationSettings.Audience
-            var settings = new GoogleJsonWebSignature.ValidationSettings();
+            var clientId = _configuration["Authentication:Google:ClientId"];
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { clientId }
+            };
             var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, settings);
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
