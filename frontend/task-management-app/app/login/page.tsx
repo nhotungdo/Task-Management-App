@@ -163,15 +163,9 @@ export default function LoginPage() {
 
           {/* Social proof */}
           <div style={{ marginTop: 40, padding: "16px 18px", background: "rgba(255,255,255,0.05)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div style={{ display: "flex", gap: -8, marginBottom: 8 }}>
-              {["#667eea","#f59e0b","#10b981","#ef4444"].map((c, i) => (
-                <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", background: c, border: "2px solid #1e2a3b", marginLeft: i === 0 ? 0 : -8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>
-                  {["A","B","C","D"][i]}
-                </div>
-              ))}
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "2px solid #1e2a3b", marginLeft: -8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#8fa3c0" }}>+2k</div>
-            </div>
-            <p style={{ fontSize: 12, color: "#8fa3c0", margin: 0 }}>Hơn <strong style={{ color: "#c8d6e8" }}>2,000 đội nhóm</strong> đang sử dụng DoneIt</p>
+            <p style={{ fontSize: 13, color: "#8fa3c0", margin: 0, lineHeight: 1.5 }}>
+              <strong style={{ color: "#c8d6e8" }}>DoneIt</strong> là dự án mới đang được phát triển, tập trung vào việc mang lại trải nghiệm quản lý công việc tối giản và hiệu quả nhất.
+            </p>
           </div>
         </div>
       </div>

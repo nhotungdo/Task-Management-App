@@ -101,6 +101,12 @@ public class ChatController : ControllerBase
         if (request.WorkspaceId == null && request.ReceiverId == null) return BadRequest("Must specify WorkspaceId or ReceiverId");
         
         var userId = GetUserId();
+
+        if (request.WorkspaceId.HasValue)
+        {
+            var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == request.WorkspaceId.Value && wm.UserId == userId);
+            if (!isMember) return Forbid();
+        }
         
         var message = new ChatMessage
         {

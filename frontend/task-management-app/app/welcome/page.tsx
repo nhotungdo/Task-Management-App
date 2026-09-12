@@ -53,10 +53,10 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { value: "2,000+", label: "Đội nhóm đang dùng" },
-  { value: "50K+", label: "Task hoàn thành / tháng" },
-  { value: "99.9%", label: "Uptime đảm bảo" },
-  { value: "4.9★", label: "Đánh giá người dùng" },
+  { value: "Mới", label: "Dự án khởi tạo" },
+  { value: "0đ", label: "Hoàn toàn miễn phí" },
+  { value: "24/7", label: "Sẵn sàng hoạt động" },
+  { value: "100%", label: "Bảo mật dữ liệu" },
 ];
 
 export default function WelcomePage() {
