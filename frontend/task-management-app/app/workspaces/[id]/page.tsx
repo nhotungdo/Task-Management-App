@@ -1,21 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
   BarChart3, LayoutGrid, Calendar as CalendarIcon, 
   List, GitCommit, MoreVertical, Plus,
   X, Users, AlertTriangle, ShieldAlert, Loader2, ChevronLeft, ChevronRight,
-  Clock, MessageSquare, Paperclip, Link2, ChevronDown, Check,
-  Flag, PlayCircle, Trash2, Edit3, Send, Target
+  Clock, MessageSquare, Link2, Check,
+  Trash2, Edit3, Send, Target
 } from "lucide-react";
 import api from "@/lib/api";
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval,
-  differenceInDays, addDays, startOfDay, isAfter, isBefore
+  differenceInDays, addDays, isAfter, isBefore
 } from "date-fns";
-import { vi } from "date-fns/locale";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,14 +91,10 @@ function Avatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" | "lg"
 
 function TaskDetailDrawer({
   taskId,
-  tasks,
-  members,
   onClose,
   onRefresh,
 }: {
   taskId: string;
-  tasks: Task[];
-  members: WorkspaceMember[];
   onClose: () => void;
   onRefresh: () => void;
 }) {
@@ -137,7 +132,10 @@ function TaskDetailDrawer({
     }
   }, [taskId]);
 
-  useEffect(() => { loadDetail(); }, [loadDetail]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDetail();
+  }, [loadDetail]);
 
   const handleSave = async () => {
     if (!detail) return;
@@ -603,6 +601,7 @@ export default function WorkspaceDetail() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tab && tab !== activeTab) setActiveTab(tab);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -640,6 +639,7 @@ export default function WorkspaceDetail() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (workspaceId) loadData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
@@ -759,8 +759,6 @@ export default function WorkspaceDetail() {
       {selectedTaskId && (
         <TaskDetailDrawer
           taskId={selectedTaskId}
-          tasks={tasks}
-          members={members}
           onClose={() => setSelectedTaskId(null)}
           onRefresh={loadData}
         />

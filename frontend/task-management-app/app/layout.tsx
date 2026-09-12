@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={`${inter.variable} ${outfit.variable}`} style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock_client_id"}>
+        <GoogleOAuthProvider clientId="315678916401-5sjtta0ui0vg38bsleooqjg2fu923ein.apps.googleusercontent.com">
           <LayoutWrapper>
             {children}
           </LayoutWrapper>

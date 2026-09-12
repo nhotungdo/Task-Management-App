@@ -17,7 +17,6 @@ import {
   Search,
   ChevronDown,
   Briefcase,
-  Clock,
   LogOut,
   HelpCircle,
   Layers
@@ -63,7 +62,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notifCount] = useState(3);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/welcome";

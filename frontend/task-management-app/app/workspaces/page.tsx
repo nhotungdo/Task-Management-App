@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -48,7 +48,10 @@ export default function WorkspacesPage() {
     }
   };
 
-  useEffect(() => { loadWorkspaces(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadWorkspaces();
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -110,16 +110,8 @@ export default function RegisterPage() {
 
           {/* Google */}
           <div style={{ marginBottom: 16 }}>
-            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Đăng nhập Google thất bại")}
-                useOneTap theme="outline" size="large" width="100%" text="signup_with" />
-            ) : (
-              <button type="button" onClick={() => setError("Cấu hình NEXT_PUBLIC_GOOGLE_CLIENT_ID trong .env")}
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "10px 16px", border: "1px solid #dde1e7", borderRadius: 4, fontSize: 14, fontWeight: 500, color: "#172b4d", background: "#fff", cursor: "pointer" }}>
-                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
-                Đăng ký với Google
-              </button>
-            )}
+            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Đăng nhập Google thất bại")}
+              useOneTap theme="outline" size="large" width="100%" text="signup_with" />
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
