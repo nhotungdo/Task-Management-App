@@ -140,6 +140,6 @@ public class ChatController : ControllerBase
             // Direct message could use UserId based grouping, but for now we just return
         }
 
-        return Ok(message);
+        return Ok(broadcastMessage);
     }
 }
