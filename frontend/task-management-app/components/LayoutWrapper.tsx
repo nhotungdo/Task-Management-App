@@ -63,6 +63,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [isLoading, setIsLoading] = useState(true);
   const [notifCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
 
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/welcome";
 
@@ -247,14 +248,56 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             
             {/* Notifications */}
-            <button style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", color: "var(--text-secondary)" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
-              onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-              <Bell size={17} />
-              {notifCount > 0 && (
-                <span style={{ position: "absolute", top: 5, right: 5, width: 8, height: 8, background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
+            <div style={{ position: "relative" }}>
+              <button 
+                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+                style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: notifMenuOpen ? "#f1f5f9" : "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", color: "var(--text-secondary)" }}
+                onMouseEnter={e => (!notifMenuOpen && (e.currentTarget.style.background = "#f1f5f9"))}
+                onMouseLeave={e => (!notifMenuOpen && (e.currentTarget.style.background = "none"))}>
+                <Bell size={17} />
+                {notifCount > 0 && (
+                  <span style={{ position: "absolute", top: 5, right: 5, width: 8, height: 8, background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
+                )}
+              </button>
+
+              {notifMenuOpen && (
+                <div 
+                  style={{ position: "absolute", top: "calc(100% + 8px)", right: -50, width: 340, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", display: "flex", flexDirection: "column" }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc" }}>
+                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Thông báo</h4>
+                    <button style={{ border: "none", background: "none", color: "#3b82f6", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Đánh dấu đã đọc</button>
+                  </div>
+                  <div style={{ maxHeight: 360, overflowY: "auto", padding: "8px 0" }}>
+                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, background: "#f0f9ff", borderLeft: "3px solid #3b82f6", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#e0f2fe"} onMouseLeave={e => e.currentTarget.style.background = "#f0f9ff"}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#bae6fd", color: "#0369a1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>AD</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}><strong>Admin</strong> đã giao cho bạn task <span style={{ fontWeight: 600, color: "#0f172a" }}>"Thiết kế UI/UX"</span></p>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>10 phút trước</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#fecaca", color: "#b91c1c", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>SYS</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}>Dự án <span style={{ fontWeight: 600, color: "#0f172a" }}>"Website Thương mại điện tử"</span> sắp đến hạn.</p>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>2 giờ trước</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#bbf7d0", color: "#15803d", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>HQ</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}><strong>Hải Quân</strong> đã bình luận trong task <span style={{ fontWeight: 600, color: "#0f172a" }}>"Fix bug đăng nhập"</span></p>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>Hôm qua lúc 15:30</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "12px", borderTop: "1px solid #f1f5f9", textAlign: "center" }}>
+                    <a href="/settings" style={{ color: "#64748b", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>Xem tất cả thông báo</a>
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             {/* Help */}
             <button style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-secondary)" }}
