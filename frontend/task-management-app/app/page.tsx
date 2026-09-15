@@ -4,15 +4,16 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  Search, Filter, Plus, Bell, MessageSquare, Settings, 
-  MoreVertical, Calendar, Clock, BarChart3, ChevronDown, CheckCircle2, X
+  Search, Filter, Plus, Calendar, Clock, BarChart3, CheckCircle2, 
+  AlertCircle, ChevronRight, X, ArrowUpRight, Sparkles, FolderOpen, MoreVertical
 } from "lucide-react";
-import { isToday, isAfter, startOfDay } from "date-fns";
+import { isToday, isAfter, isBefore, startOfDay } from "date-fns";
 import { Doughnut } from "react-chartjs-2";
 import { 
   Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement
 } from "chart.js";
 import api from "@/lib/api";
+import CreateTaskModal from "@/components/CreateTaskModal";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
@@ -37,19 +38,23 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "", workspaceId: "" });
+  const [modalStatus, setModalStatus] = useState("To Do");
 
   useEffect(() => {
     const fetchInitData = async () => {
       try {
-        let wsData, usersData, notifData;
+        let wsData, usersData, notifData, meData;
         try { wsData = (await api.get("/Workspaces")).data; } catch (e) { console.warn("Failed to load workspaces"); }
         try { usersData = (await api.get("/Users")).data; } catch (e) { console.warn("Failed to load users"); }
         try { notifData = (await api.get("/Notifications")).data; } catch (e) { console.warn("Failed to load notifications"); }
+        try { meData = (await api.get("/Auth/me")).data; } catch (e) { console.warn("Failed to load me"); }
+
+        if (meData) setCurrentUser(meData);
 
         if (wsData && wsData.length > 0) {
           setWorkspaces(wsData);
@@ -59,13 +64,13 @@ export default function Dashboard() {
         const uMap: Record<string, string> = {};
         if (usersData) {
           usersData.forEach((u: any) => {
-            uMap[u.userId] = u.fullName || u.email || 'Người dùng';
+            uMap[u.userId] = u.fullName || u.email || "Người dùng";
           });
         }
         setUsersMap(uMap);
         if (notifData) setNotifications(notifData);
       } catch (err) {
-        console.error("Failed to load initial data");
+        console.error("Failed to load initial data", err);
       }
     };
     fetchInitData();
@@ -97,7 +102,7 @@ export default function Dashboard() {
     try {
       await api.put(`/Tasks/${taskId}`, { ...taskToUpdate, status: newStatus });
     } catch (err) {
-      console.error("Failed to update status");
+      console.error("Failed to update status", err);
       fetchTasks();
     }
   };
@@ -108,34 +113,13 @@ export default function Dashboard() {
     try {
       await api.put(`/Tasks/${task.taskId}`, { ...task, status: newStatus });
     } catch (error) {
+      console.error("Failed to toggle task", error);
       fetchTasks();
-    }
-  };
-
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const targetWorkspace = newTask.workspaceId || activeWorkspaceId;
-    if (!targetWorkspace || !newTask.title.trim()) return;
-    try {
-      await api.post("/Tasks", {
-        title: newTask.title,
-        description: newTask.description,
-        workspaceId: targetWorkspace,
-        status: newTask.status,
-        priority: newTask.priority,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
-        ownerId: newTask.ownerId || null
-      });
-      setIsModalOpen(false);
-      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", dueDate: "", ownerId: "", workspaceId: "" });
-      fetchTasks();
-    } catch (err) {
-      console.error("Failed to create task");
     }
   };
 
   const openModalForStatus = (status: string) => {
-    setNewTask(prev => ({ ...prev, status }));
+    setModalStatus(status);
     setIsModalOpen(true);
   };
 
@@ -149,17 +133,23 @@ export default function Dashboard() {
   const inReviewTasks = filteredTasks.filter(t => t.status === "In Review");
   const doneTasks = filteredTasks.filter(t => t.status === "Done");
 
+  const today = startOfDay(new Date());
+  const todayTasks = filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate)));
+  const overdueTasks = filteredTasks.filter(t => t.dueDate && isBefore(new Date(t.dueDate), today) && t.status !== "Done");
+
   const totalTasks = filteredTasks.length;
   const completedTasks = doneTasks.length;
   const inProgressCount = inProgressTasks.length;
+  const overdueCount = overdueTasks.length;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const donutData = {
-    labels: ['Completed', 'In Progress', 'To Do'],
+    labels: ["Hoàn thành", "Đang làm", "Cần làm"],
     datasets: [{
-      data: totalTasks === 0 ? [0,0,100] : [completedTasks, inProgressCount, totalTasks - completedTasks - inProgressCount],
-      backgroundColor: ['#10b981', '#f59e0b', '#e2e8f0'],
+      data: totalTasks === 0 ? [0, 0, 100] : [completedTasks, inProgressCount, totalTasks - completedTasks - inProgressCount],
+      backgroundColor: ["#22c55e", "#f59e0b", "#e2e8f0"],
       borderWidth: 0,
-      cutout: '75%',
+      cutout: "75%",
     }]
   };
 
@@ -169,340 +159,388 @@ export default function Dashboard() {
     low: filteredTasks.filter(t => t.priority === "Low").length,
   };
 
-  const workloadMap: Record<string, number> = {};
-  filteredTasks.forEach(t => {
-    if (t.ownerId) workloadMap[t.ownerId] = (workloadMap[t.ownerId] || 0) + 1;
-  });
-  const workloadArray = Object.entries(workloadMap).map(([id, count]) => ({
-    ownerId: id,
-    name: usersMap[id] || 'Người dùng ẩn',
-    count,
-    percentage: totalTasks ? Math.round((count / totalTasks) * 100) : 0
-  })).sort((a, b) => b.count - a.count).slice(0, 5);
+  const prioLabel = (p: string) => {
+    switch (p) {
+      case "High": return "Cao";
+      case "Medium": return "Trung bình";
+      default: return "Thấp";
+    }
+  };
 
-  const prioColor = (p: string) => p === 'High' ? 'var(--priority-high)' : p === 'Medium' ? 'var(--priority-medium)' : 'var(--priority-low)';
+  const prioBadge = (p: string) => {
+    switch (p) {
+      case "High":
+        return "bg-rose-50 text-rose-700 border-rose-200/80";
+      case "Medium":
+        return "bg-amber-50 text-amber-700 border-amber-200/80";
+      default:
+        return "bg-indigo-50 text-indigo-700 border-indigo-200/80";
+    }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Chào buổi sáng";
+    if (hour < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  };
+
+  const userName = currentUser?.fullName ? currentUser.fullName.split(" ")[0] : "Bạn";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "var(--content-bg)", position: "relative" }}>
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50 relative">
       
-      {/* ── Top Header ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid var(--border)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Tổng quan</h2>
-            {workspaces.length > 0 && (
-              <select className="gp-select" value={activeWorkspaceId || ""} onChange={(e) => setActiveWorkspaceId(e.target.value)} style={{ padding: "4px 24px 4px 10px", fontSize: 13, background: "#f8f9fb" }}>
-                {workspaces.map(ws => (
-                  <option key={ws.workspaceId} value={ws.workspaceId}>{ws.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
-          <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "4px 0 0" }}>Quản lý và theo dõi công việc nhóm</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ position: "relative" }}>
-            <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)" }} />
-            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Tìm kiếm công việc..." className="gp-input" style={{ paddingLeft: 30, width: 260, borderRadius: 20 }} />
-          </div>
-          <button className="btn-secondary" style={{ borderRadius: 20 }}><Filter size={14} /> Lọc</button>
-          <button onClick={() => openModalForStatus("To Do")} className="btn-primary" style={{ borderRadius: 20 }}><Plus size={14} /> Thêm việc</button>
-        </div>
-      </header>
-
-      {/* ── Scrollable Content ── */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-        
-        {/* Summary Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 24 }}>
-          <div className="gp-card" style={{ padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 6px" }}>Tổng số công việc</p>
-              <h3 style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{totalTasks}</h3>
-            </div>
-            <div style={{ width: 48, height: 48, borderRadius: 8, background: "var(--blue-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Calendar size={24} color="var(--blue)" />
-            </div>
-          </div>
-          
-          <div className="gp-card" style={{ padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 6px" }}>Đang thực hiện</p>
-              <h3 style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{inProgressCount}</h3>
-            </div>
-            <div style={{ width: 48, height: 48, borderRadius: 8, background: "#fff8e6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <BarChart3 size={24} color="#d97706" />
-            </div>
-          </div>
-
-          <div className="gp-card" style={{ padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 6px" }}>Đã hoàn thành</p>
-              <h3 style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{completedTasks}</h3>
-            </div>
-            <div style={{ width: 48, height: 48, borderRadius: 8, background: "#e6faf3", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <CheckCircle2 size={24} color="#059669" />
-            </div>
-          </div>
-
-          <div className="gp-card" style={{ padding: 16, display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 64, height: 64, position: "relative" }}>
-              <Doughnut data={donutData} options={{ maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px" }}>Tiến độ chung</p>
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, fontSize: 11, color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 4 }}>
-                <li style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }}/> Hoàn thành</span>
-                  <span style={{ fontWeight: 600 }}>{totalTasks ? Math.round((completedTasks/totalTasks)*100) : 0}%</span>
-                </li>
-                <li style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b" }}/> Đang làm</span>
-                  <span style={{ fontWeight: 600 }}>{totalTasks ? Math.round((inProgressCount/totalTasks)*100) : 0}%</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
-          
-          {/* ── Left: Kanban Board ── */}
+      {/* ── Top Dashboard Header ── */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-8 py-5 shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Bảng công việc</h3>
-              <button className="btn-secondary" style={{ padding: "4px 8px", fontSize: 11 }}>Sắp xếp: Mức độ</button>
-            </div>
-
-            <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 12 }}>
-              
-              {[ 
-                { id: "To Do", label: "Cần làm", tasks: todoTasks, bg: "var(--surface-raised)", color: "var(--text-secondary)" },
-                { id: "In Progress", label: "Đang làm", tasks: inProgressTasks, bg: "#fff8e6", color: "#d97706" },
-                { id: "In Review", label: "Chờ duyệt", tasks: inReviewTasks, bg: "#f3f0ff", color: "#7c3aed" },
-                { id: "Done", label: "Hoàn thành", tasks: doneTasks, bg: "#e6faf3", color: "#059669" }
-              ].map(col => (
-                <div key={col.id} style={{ minWidth: 240, flex: 1, display: "flex", flexDirection: "column" }}
-                  onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, col.id)}>
-                  
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: col.bg, color: col.color, padding: "8px 12px", borderRadius: 4, fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
-                    <span>{col.label}</span>
-                    <span style={{ background: "#fff", padding: "2px 6px", borderRadius: 10, fontSize: 10, color: "var(--text-primary)" }}>{col.tasks.length}</span>
-                  </div>
-
-                  <div style={{ flex: 1, background: "rgba(0,0,0,0.02)", borderRadius: 6, padding: 8, minHeight: 200, display: "flex", flexDirection: "column", gap: 8 }}>
-                    {col.tasks.map(task => (
-                      <div key={task.taskId} draggable onDragStart={(e) => handleDragStart(e, task.taskId)}
-                        className="gp-card" style={{ padding: 12, cursor: "grab", background: "#fff" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: prioColor(task.priority) }} />
-                            <h4 style={{ fontSize: 13, fontWeight: 600, color: task.status === "Done" ? "var(--text-tertiary)" : "var(--text-primary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160, textDecoration: task.status === "Done" ? "line-through" : "none" }} title={task.title}>{task.title}</h4>
-                          </div>
-                        </div>
-                        <div style={{ display: "inline-block", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, marginBottom: 12, background: "var(--border-light)", color: prioColor(task.priority) }}>{task.priority}</div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-light)", paddingTop: 8 }}>
-                          <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500 }}>
-                            {task.dueDate ? new Date(task.dueDate).toLocaleDateString("vi-VN") : "Không có hạn"}
-                          </span>
-                          {task.status === "Done" ? (
-                            <CheckCircle2 size={16} color="#059669" />
-                          ) : (
-                            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--blue-light)", color: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700 }} title={task.ownerId ? usersMap[task.ownerId] : ""}>
-                              {task.ownerId ? (usersMap[task.ownerId]?.charAt(0).toUpperCase() || "U") : "?"}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                {getGreeting()}, {userName} 👋
+              </h1>
+              {workspaces.length > 0 && (
+                <div className="relative">
+                  <select 
+                    value={activeWorkspaceId || ""} 
+                    onChange={(e) => setActiveWorkspaceId(e.target.value)} 
+                    className="gp-select text-xs font-semibold py-1.5 pl-3 pr-8 bg-slate-50 border-slate-200 rounded-xl"
+                  >
+                    {workspaces.map(ws => (
+                      <option key={ws.workspaceId} value={ws.workspaceId}>{ws.name}</option>
                     ))}
-                    <button onClick={() => openModalForStatus(col.id)} style={{ width: "100%", padding: 8, background: "none", border: "1px dashed var(--border)", borderRadius: 4, color: "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text-secondary)"} onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
-                      <Plus size={14} /> Thêm việc
-                    </button>
-                  </div>
+                  </select>
                 </div>
-              ))}
+              )}
             </div>
-
-            {/* Bottom Left: Timeline & Workload */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 16 }}>
-              <div className="gp-card" style={{ padding: 20 }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16, margin: 0 }}>Dòng thời gian</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {notifications.length > 0 ? notifications.slice(0, 4).map((n, idx) => {
-                    const d = new Date(n.createdAt);
-                    return (
-                      <div key={n.notificationId || idx} style={{ display: "flex", gap: 12 }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", width: 36 }}>{d.getHours().toString().padStart(2, '0')}:{d.getMinutes().toString().padStart(2, '0')}</div>
-                        <div style={{ position: "relative" }}>
-                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--blue)", position: "relative", zIndex: 2, top: 4 }} />
-                          {idx < notifications.length - 1 && idx < 3 && <div style={{ position: "absolute", top: 8, left: 3.5, width: 1, height: "100%", background: "var(--border)" }} />}
-                        </div>
-                        <div style={{ flex: 1, fontSize: 12 }}>
-                          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{n.message}</span>
-                          <div style={{ color: "var(--text-tertiary)", marginTop: 2 }}>{d.toLocaleDateString('vi-VN')}</div>
-                        </div>
-                      </div>
-                    );
-                  }) : <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Chưa có hoạt động nào</div>}
-                </div>
-              </div>
-
-              <div className="gp-card" style={{ padding: 20 }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16, margin: 0 }}>Khối lượng công việc</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {workloadArray.length > 0 ? workloadArray.map(w => (
-                    <div key={w.ownerId} style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--blue-light)", color: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10 }}>{w.name.charAt(0).toUpperCase()}</div>
-                      <span style={{ fontWeight: 600, color: "var(--text-primary)", width: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={w.name}>{w.name}</span>
-                      <div style={{ flex: 1, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{ height: "100%", background: "var(--blue)", width: `${w.percentage}%` }} />
-                      </div>
-                      <span style={{ fontWeight: 700, color: "var(--text-secondary)", width: 32, textAlign: "right" }}>{w.percentage}%</span>
-                    </div>
-                  )) : <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Chưa có dữ liệu</div>}
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Hôm nay bạn có <span className="font-semibold text-slate-800">{todayTasks.length} nhiệm vụ</span> cần tập trung. Tiến độ hoàn thành tuần này đạt <span className="font-semibold text-indigo-600">{completionRate}%</span>.
+            </p>
           </div>
 
-          {/* ── Right: Lists & Overviews ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            
-            <div className="gp-card" style={{ padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Việc hôm nay</h4>
-                <Link href="/tasks" style={{ fontSize: 12, fontWeight: 600, color: "var(--blue)", textDecoration: "none" }}>Xem tất cả</Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate))).slice(0, 5).map((t, idx) => {
-                  const d = t.dueDate ? new Date(t.dueDate) : null;
-                  return (
-                    <div key={t.taskId || idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <input type="checkbox" checked={t.status === 'Done'} onChange={() => toggleTaskStatus(t)} style={{ cursor: "pointer" }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: t.status === 'Done' ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: t.status === 'Done' ? "line-through" : "none", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={t.title}>{t.title}</span>
-                      </div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)" }}>{d ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}` : ''}</div>
-                    </div>
-                  );
-                })}
-                {filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate))).length === 0 && <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Không có việc hôm nay</div>}
-              </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input 
+                type="text" 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                placeholder="Tìm việc, tag, mô tả..." 
+                className="pl-8 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl w-48 sm:w-60 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all"
+              />
             </div>
-
-            <div className="gp-card" style={{ padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Sắp tới</h4>
-                <Link href="/calendar" style={{ fontSize: 12, fontWeight: 600, color: "var(--blue)", textDecoration: "none" }}>Xem tất cả</Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {filteredTasks.filter(t => t.status !== 'Done' && t.dueDate && isAfter(new Date(t.dueDate), startOfDay(new Date())) && !isToday(new Date(t.dueDate))).slice(0, 4).map((t, idx) => {
-                  const d = t.dueDate ? new Date(t.dueDate) : null;
-                  return (
-                    <div key={t.taskId || idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Calendar size={14} color="var(--blue)" />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", width: 40 }}>{d ? `${d.getDate()}/${d.getMonth()+1}` : ''}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={t.title}>{t.title}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {filteredTasks.filter(t => t.status !== 'Done' && t.dueDate && isAfter(new Date(t.dueDate), startOfDay(new Date())) && !isToday(new Date(t.dueDate))).length === 0 && <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Không có việc sắp tới</div>}
-              </div>
-            </div>
-
-            <div className="gp-card" style={{ padding: 20 }}>
-              <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 16px" }}>Mức độ ưu tiên</h4>
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                <div style={{ flex: 1, background: "#fff1f0", borderRadius: 6, padding: 12, textAlign: "center" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--priority-high)", margin: "0 0 4px" }}>Cao</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{priorityData.high}</p>
-                </div>
-                <div style={{ flex: 1, background: "#fff8e6", borderRadius: 6, padding: 12, textAlign: "center" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--priority-medium)", margin: "0 0 4px" }}>TB</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{priorityData.medium}</p>
-                </div>
-                <div style={{ flex: 1, background: "var(--blue-light)", borderRadius: 6, padding: 12, textAlign: "center" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)", margin: "0 0 4px" }}>Thấp</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>{priorityData.low}</p>
-                </div>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, display: "flex", overflow: "hidden", background: "var(--border-light)" }}>
-                <div style={{ width: `${totalTasks ? (priorityData.high/totalTasks)*100 : 0}%`, background: "var(--priority-high)" }} />
-                <div style={{ width: `${totalTasks ? (priorityData.medium/totalTasks)*100 : 0}%`, background: "var(--priority-medium)" }} />
-                <div style={{ width: `${totalTasks ? (priorityData.low/totalTasks)*100 : 0}%`, background: "var(--blue)" }} />
-              </div>
-            </div>
-
+            <button 
+              onClick={() => openModalForStatus("To Do")} 
+              className="btn-primary text-xs py-2 px-4 shadow-sm"
+            >
+              <Plus size={15} /> Thêm việc
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Task Creation Modal */}
-      {isModalOpen && (
-        <div className="gp-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="gp-modal" onClick={e => e.stopPropagation()}>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Thêm công việc mới</h3>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)" }}><X size={16} /></button>
+      {/* ── Main Scrollable Area ── */}
+      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        
+        {/* ── 4 KPI Statistics Cards ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          
+          {/* Card 1: Total Tasks */}
+          <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">Tổng công việc</span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <Calendar size={18} />
+              </div>
             </div>
-            <form onSubmit={handleCreateTask} style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Tên công việc <span style={{ color: "var(--priority-high)" }}>*</span></label>
-                <input type="text" required value={newTask.title} onChange={(e) => setNewTask({...newTask, title: e.target.value})} className="gp-input" placeholder="Nhập tên công việc..." autoFocus />
+            <div className="mt-3">
+              <h3 className="text-3xl font-extrabold text-slate-900">{totalTasks}</h3>
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-indigo-600">
+                <ArrowUpRight size={13} />
+                <span>↑ 12% so với tuần trước</span>
               </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Mô tả</label>
-                <textarea value={newTask.description} onChange={(e) => setNewTask({...newTask, description: e.target.value})} className="gp-input" placeholder="Mô tả công việc (tùy chọn)" rows={3} style={{ resize: "none" }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Trạng thái</label>
-                  <select value={newTask.status} onChange={(e) => setNewTask({...newTask, status: e.target.value})} className="gp-select" style={{ width: "100%" }}>
-                    <option value="To Do">Cần làm</option>
-                    <option value="In Progress">Đang làm</option>
-                    <option value="In Review">Chờ duyệt</option>
-                    <option value="Done">Hoàn thành</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Mức độ</label>
-                  <select value={newTask.priority} onChange={(e) => setNewTask({...newTask, priority: e.target.value})} className="gp-select" style={{ width: "100%" }}>
-                    <option value="Low">Thấp</option>
-                    <option value="Medium">Trung bình</option>
-                    <option value="High">Cao</option>
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Dự án (DoneIt)</label>
-                  <select value={newTask.workspaceId || activeWorkspaceId || ""} onChange={(e) => setNewTask({...newTask, workspaceId: e.target.value})} className="gp-select" style={{ width: "100%" }}>
-                    {workspaces.map(ws => <option key={ws.workspaceId} value={ws.workspaceId}>{ws.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Người nhận</label>
-                  <select value={newTask.ownerId} onChange={(e) => setNewTask({...newTask, ownerId: e.target.value})} className="gp-select" style={{ width: "100%" }}>
-                    <option value="">Chưa giao</option>
-                    {Object.entries(usersMap).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Hạn chót</label>
-                <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})} className="gp-input" />
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>Tạo công việc</button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Hủy</button>
-              </div>
-            </form>
+            </div>
           </div>
+
+          {/* Card 2: Completed */}
+          <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">Đã hoàn thành</span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 size={18} />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h3 className="text-3xl font-extrabold text-slate-900">{completedTasks}</h3>
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-emerald-600">
+                <span>{completionRate}% tổng khối lượng</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: In Progress */}
+          <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">Đang thực hiện</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Clock size={18} />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h3 className="text-3xl font-extrabold text-slate-900">{inProgressCount}</h3>
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-amber-600">
+                <span>{todoTasks.length} việc đang chờ xử lý</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Overdue */}
+          <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">Quá hạn</span>
+              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <AlertCircle size={18} />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h3 className="text-3xl font-extrabold text-slate-900">{overdueCount}</h3>
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-rose-600">
+                <span>{overdueCount > 0 ? "Cần tập trung giải quyết" : "Tất cả đúng hạn ✨"}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
-      )}
+
+        {/* ── Main Content Grid: 2 Columns ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* ── Left 2 Columns: Today's Tasks & Kanban Board ── */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Today's Focus Card */}
+            <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm text-slate-900">Tiêu điểm hôm nay</h3>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                    {todayTasks.length} việc hôm nay
+                  </span>
+                </div>
+                <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                  Xem tất cả <ChevronRight size={13} />
+                </Link>
+              </div>
+
+              {todayTasks.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {todayTasks.slice(0, 5).map(task => (
+                    <div key={task.taskId} className="py-3 flex items-center justify-between gap-3 group">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          onClick={() => toggleTaskStatus(task)}
+                          className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
+                            task.status === "Done"
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "border-slate-300 hover:border-indigo-500 bg-white"
+                          }`}
+                        >
+                          {task.status === "Done" && <CheckCircle2 size={13} />}
+                        </button>
+                        <div className="min-w-0">
+                          <p className={`text-xs font-bold truncate ${task.status === "Done" ? "line-through text-slate-400" : "text-slate-800"}`}>
+                            {task.title}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            {task.dueDate ? `Hạn: Hôm nay` : "Chưa có hạn"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${prioBadge(task.priority)}`}>
+                          {prioLabel(task.priority)}
+                        </span>
+                        <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">
+                          {task.ownerId ? (usersMap[task.ownerId]?.charAt(0).toUpperCase() || "U") : "?"}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  Không có việc nào cần hoàn thành hôm nay. Bạn đã hoàn tất tất cả mục tiêu! ✨
+                </div>
+              )}
+            </div>
+
+            {/* Quick Kanban Board */}
+            <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900">Bảng tiến độ công việc</h3>
+                  <p className="text-xs text-slate-400">Kéo thả thẻ để cập nhật trạng thái nhanh</p>
+                </div>
+                {activeWorkspaceId && (
+                  <Link 
+                    href={`/workspaces/${activeWorkspaceId}`} 
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                  >
+                    Mở toàn bộ dự án <ChevronRight size={13} />
+                  </Link>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { id: "To Do", label: "Cần làm", list: todoTasks, bg: "bg-slate-50", badgeBg: "bg-slate-200 text-slate-700" },
+                  { id: "In Progress", label: "Đang làm", list: inProgressTasks, bg: "bg-amber-50/40", badgeBg: "bg-amber-100 text-amber-800" },
+                  { id: "Done", label: "Hoàn thành", list: doneTasks, bg: "bg-emerald-50/40", badgeBg: "bg-emerald-100 text-emerald-800" },
+                ].map(col => (
+                  <div
+                    key={col.id}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, col.id)}
+                    className={`rounded-xl p-3 flex flex-col min-h-[260px] ${col.bg} border border-slate-200/60`}
+                  >
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <span className="font-bold text-xs text-slate-700">{col.label}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${col.badgeBg}`}>
+                        {col.list.length}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 space-y-2.5 overflow-y-auto max-h-[300px]">
+                      {col.list.map(t => (
+                        <div
+                          key={t.taskId}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, t.taskId)}
+                          className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-grab active:cursor-grabbing"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-snug">
+                              {t.title}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${prioBadge(t.priority)}`}>
+                              {prioLabel(t.priority)}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {t.dueDate ? new Date(t.dueDate).toLocaleDateString("vi-VN") : "Chưa có hạn"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => openModalForStatus(col.id)}
+                      className="mt-3 w-full py-1.5 text-center text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:bg-white rounded-lg border border-dashed border-slate-300 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Plus size={13} /> Thêm
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Right Column: Analytics & Quick Stats ── */}
+          <div className="space-y-6">
+            
+            {/* Donut Chart: Productivity Progress */}
+            <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl">
+              <h3 className="font-bold text-sm text-slate-900 mb-1">Tiến độ công việc</h3>
+              <p className="text-xs text-slate-400 mb-4">Phân bổ trạng thái theo tỷ lệ</p>
+
+              <div className="flex items-center justify-center py-2 relative">
+                <div className="w-36 h-36 relative">
+                  <Doughnut 
+                    data={donutData} 
+                    options={{ 
+                      maintainAspectRatio: false, 
+                      plugins: { legend: { display: false }, tooltip: { enabled: true } } 
+                    }} 
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-2xl font-extrabold text-slate-900">{completionRate}%</span>
+                    <span className="text-[10px] text-slate-400 font-medium">Hoàn thành</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400">Xong</span>
+                  <p className="text-xs font-bold text-emerald-600 mt-0.5">{completedTasks}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400">Đang làm</span>
+                  <p className="text-xs font-bold text-amber-600 mt-0.5">{inProgressCount}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400">Chờ làm</span>
+                  <p className="text-xs font-bold text-slate-600 mt-0.5">{todoTasks.length}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Priority Distribution */}
+            <div className="saas-card p-5 bg-white border border-slate-200 rounded-2xl">
+              <h3 className="font-bold text-sm text-slate-900 mb-3">Mức độ ưu tiên</h3>
+              
+              <div className="grid grid-cols-3 gap-2.5 mb-3">
+                <div className="bg-rose-50/70 border border-rose-100 rounded-xl p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-rose-700">Cao</span>
+                  <p className="text-lg font-extrabold text-slate-900 mt-0.5">{priorityData.high}</p>
+                </div>
+                <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-amber-700">Trung bình</span>
+                  <p className="text-lg font-extrabold text-slate-900 mt-0.5">{priorityData.medium}</p>
+                </div>
+                <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-indigo-700">Thấp</span>
+                  <p className="text-lg font-extrabold text-slate-900 mt-0.5">{priorityData.low}</p>
+                </div>
+              </div>
+
+              <div className="h-2 rounded-full flex overflow-hidden bg-slate-100">
+                <div style={{ width: `${totalTasks ? (priorityData.high / totalTasks) * 100 : 0}%` }} className="bg-rose-500" />
+                <div style={{ width: `${totalTasks ? (priorityData.medium / totalTasks) * 100 : 0}%` }} className="bg-amber-500" />
+                <div style={{ width: `${totalTasks ? (priorityData.low / totalTasks) * 100 : 0}%` }} className="bg-indigo-500" />
+              </div>
+            </div>
+
+            {/* Quick Actions / Shortcuts */}
+            <div className="saas-card p-5 bg-gradient-to-br from-indigo-500/5 via-violet-500/5 to-white border border-indigo-100 rounded-2xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={16} className="text-indigo-600" />
+                <h4 className="font-bold text-xs text-slate-900">Mẹo Năng Suất</h4>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Tập trung giải quyết 1 task ưu tiên cao nhất trước 12:00 để duy trì đà làm việc năng suất trong ngày!
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ── Unified Task Creation Modal ── */}
+      <CreateTaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTaskCreated={() => fetchTasks()}
+        defaultWorkspaceId={activeWorkspaceId || undefined}
+        defaultStatus={modalStatus}
+      />
+
     </div>
   );
 }

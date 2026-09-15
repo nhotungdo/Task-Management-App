@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+﻿/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -19,9 +19,15 @@ import {
   Briefcase,
   LogOut,
   HelpCircle,
-  Layers
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import api from "@/lib/api";
+import AiAssistantModal from "@/components/AiAssistantModal";
 
 interface UserData {
   fullName?: string;
@@ -31,30 +37,17 @@ interface UserData {
 
 const NAV_ITEMS = [
   { href: "/", label: "Tổng quan", icon: Home },
+  { href: "/tasks", label: "Công việc của tôi", icon: CheckSquare },
   { href: "/workspaces", label: "Dự án", icon: FolderKanban },
-  { href: "/tasks", label: "My Tasks", icon: CheckSquare },
-  { href: "/calendar", label: "Lịch", icon: CalendarDays },
-  { href: "/analytics", label: "Báo cáo", icon: BarChart2 },
-  { href: "/messages", label: "Chat", icon: MessageCircle },
+  { href: "/calendar", label: "Lịch biểu", icon: CalendarDays },
   { href: "/team", label: "Nhóm", icon: Users },
+  { href: "/analytics", label: "Báo cáo", icon: BarChart2 },
+  { href: "/messages", label: "Tin nhắn", icon: MessageCircle },
 ];
 
 const BOTTOM_ITEMS = [
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
-
-function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: React.ElementType; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`gp-nav-item ${active ? "active" : ""}`}
-    >
-      <Icon size={16} strokeWidth={active ? 2.5 : 2} />
-      <span>{label}</span>
-      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-300" />}
-    </Link>
-  );
-}
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -64,6 +57,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [notifCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/welcome";
 
@@ -96,10 +91,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   if (isLoading) {
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--content-bg)" }}>
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#0052cc", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-          <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>Đang tải...</p>
+          <div style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#6366f1", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
+          <p style={{ color: "#64748b", fontSize: 13, fontWeight: 500 }}>Đang tải không gian làm việc...</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -111,217 +106,339 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     : user?.email?.[0]?.toUpperCase() ?? "U";
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--content-bg)" }}>
+    <div className="flex h-screen overflow-hidden bg-slate-50 relative">
 
-      {/* ── Sidebar ── */}
-      <aside className="gp-sidebar" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-
-        {/* Logo */}
-        <div style={{ padding: "0 16px", height: 52, display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: "linear-gradient(135deg, #0052cc, #0073e6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Layers size={15} color="#fff" strokeWidth={2.5} />
+      {/* ── Desktop Sidebar ── */}
+      <aside 
+        className={`hidden md:flex flex-col h-screen border-r border-slate-200/80 bg-white transition-all duration-300 relative z-20 ${
+          collapsed ? "w-[72px]" : "w-[248px]"
+        }`}
+      >
+        {/* Logo & Toggle */}
+        <div className="h-14 px-4 flex items-center justify-between border-b border-slate-100 shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 overflow-hidden text-decoration-none">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shrink-0 shadow-sm shadow-indigo-200">
+              <Sparkles size={16} />
             </div>
-            <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              DoneIt<span style={{ color: "#4da6ff" }}>.</span>
-            </span>
+            {!collapsed && (
+              <span className="font-extrabold text-base tracking-tight text-slate-900">
+                DoneIt<span className="text-violet-500">.</span>
+              </span>
+            )}
           </Link>
-        </div>
 
-        {/* Navigation */}
-        <nav style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          
-          {/* Main section */}
-          <div style={{ padding: "4px 0 8px" }}>
-            {NAV_ITEMS.map(item => (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                icon={item.icon}
-                active={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
-              />
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 16px 8px" }} />
-
-          {/* Workspaces section */}
-          <div style={{ padding: "0 8px" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "rgba(143,163,192,0.6)", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 12px 6px" }}>Dự án gần đây</p>
-            <NavItem href="/workspaces" label="Tất cả dự án" icon={Briefcase} active={false} />
-          </div>
-        </nav>
-
-        {/* Bottom section */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "8px 0" }}>
-          {BOTTOM_ITEMS.map(item => (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              icon={item.icon}
-              active={pathname.startsWith(item.href)}
-            />
-          ))}
           <button
-            onClick={handleLogout}
-            className="gp-nav-item"
-            style={{ width: "100%", cursor: "pointer", border: "none", background: "none", textAlign: "left" }}
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            title={collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"}
           >
-            <LogOut size={16} strokeWidth={2} />
-            <span>Đăng xuất</span>
+            {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
         </div>
 
-        {/* User info */}
-        <div
-          style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", position: "relative" }}
-          onClick={() => setUserMenuOpen(v => !v)}
-        >
-          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #667eea, #764ba2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-            {initials}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#c8d6e8", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user?.fullName || user?.email || "Người dùng"}
-            </p>
-            <p style={{ fontSize: 10, color: "#6b85a3", margin: 0 }}>{user?.role || "Member"}</p>
-          </div>
-          <ChevronDown size={13} color="#6b85a3" />
-
-          {/* User menu dropdown */}
-          {userMenuOpen && (
-            <div
-              style={{ position: "absolute", bottom: "calc(100% + 4px)", left: 8, right: 8, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", zIndex: 100, overflow: "hidden" }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid #f1f5f9" }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: "#172b4d", margin: 0 }}>{user?.fullName || "Người dùng"}</p>
-                <p style={{ fontSize: 11, color: "#5e6c84", margin: "2px 0 0" }}>{user?.email}</p>
-              </div>
-              <Link href="/settings" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", fontSize: 13, color: "#172b4d", textDecoration: "none" }}
-                onClick={() => setUserMenuOpen(false)}>
-                <Settings size={14} /> Cài đặt tài khoản
+        {/* Navigation items */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon;
+            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all group ${
+                  active
+                    ? "bg-indigo-50/90 text-indigo-600 font-semibold shadow-xs"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                } ${collapsed ? "justify-center px-0" : ""}`}
+              >
+                <Icon 
+                  size={18} 
+                  className={`shrink-0 transition-colors ${
+                    active ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                  }`} 
+                />
+                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && active && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                )}
               </Link>
-              <button onClick={handleLogout}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", fontSize: 13, color: "#dc3545", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-                <LogOut size={14} /> Đăng xuất
+            );
+          })}
+
+          {/* Divider */}
+          <div className="pt-3 pb-1">
+            <div className="h-px bg-slate-100 mx-2" />
+          </div>
+
+          {/* Quick Workspaces link */}
+          {!collapsed ? (
+            <div className="px-2 pt-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5">Khu vực làm việc</p>
+              <Link
+                href="/workspaces"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+              >
+                <Briefcase size={15} className="text-slate-400" />
+                <span>Tất cả dự án</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/workspaces"
+              title="Tất cả dự án"
+              className="flex items-center justify-center py-2.5 text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <Briefcase size={18} />
+            </Link>
+          )}
+        </nav>
+
+        {/* Bottom items */}
+        <div className="p-2 border-t border-slate-100 space-y-1">
+          {BOTTOM_ITEMS.map(item => {
+            const Icon = item.icon;
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                  active ? "bg-slate-100 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-50"
+                } ${collapsed ? "justify-center px-0" : ""}`}
+              >
+                <Icon size={16} className="text-slate-400 shrink-0" />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
+
+          <button
+            onClick={handleLogout}
+            title={collapsed ? "Đăng xuất" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-red-600 hover:bg-red-50/80 transition-colors ${
+              collapsed ? "justify-center px-0" : ""
+            }`}
+          >
+            <LogOut size={16} className="text-red-500 shrink-0" />
+            {!collapsed && <span>Đăng xuất</span>}
+          </button>
+        </div>
+
+        {/* User Card */}
+        <div 
+          className={`p-3 border-t border-slate-100 flex items-center gap-2.5 cursor-pointer hover:bg-slate-50 transition-colors relative ${
+            collapsed ? "justify-center" : ""
+          }`}
+          onClick={() => setUserMenuOpen(!userMenuOpen)}
+        >
+          <div className="relative shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-xs font-bold shadow-xs">
+              {initials}
+            </div>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" title="Đang trực tuyến" />
+          </div>
+
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-800 truncate">{user?.fullName || user?.email || "Người dùng"}</p>
+              <p className="text-[10px] text-slate-400 capitalize truncate">{user?.role || "Thành viên"}</p>
+            </div>
+          )}
+
+          {!collapsed && <ChevronDown size={13} className="text-slate-400" />}
+
+          {/* User popup dropdown */}
+          {userMenuOpen && (
+            <div 
+              className="absolute bottom-full left-2 right-2 mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 z-50 animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                <p className="text-xs font-bold text-slate-800 truncate">{user?.fullName || "Người dùng"}</p>
+                <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
+              </div>
+              <Link 
+                href="/settings"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50 font-medium"
+              >
+                <User size={14} className="text-slate-400" /> Tài khoản & Bảo mật
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-600 hover:bg-red-50 font-medium"
+              >
+                <LogOut size={14} className="text-red-500" /> Đăng xuất
               </button>
             </div>
           )}
         </div>
       </aside>
 
-      {/* ── Main Area ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* ── Main View Area ── */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         
-        {/* Top Bar */}
-        <header style={{
-          height: "var(--topbar-height)",
-          background: "var(--topbar-bg)",
-          borderBottom: "1px solid var(--topbar-border)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 20px",
-          gap: 12,
-          flexShrink: 0,
-          zIndex: 10,
-        }}>
+        {/* Top Header */}
+        <header className="h-14 px-6 border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 z-10">
           
-          {/* Search */}
-          <div style={{ flex: 1, maxWidth: 340, position: "relative" }}>
-            <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none" }} />
+          {/* Universal Search Bar */}
+          <div className="flex-1 max-w-md relative">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Tìm kiếm task, dự án..."
-              style={{ width: "100%", padding: "6px 10px 6px 32px", border: "1px solid var(--border)", borderRadius: 4, fontSize: 13, color: "var(--text-primary)", background: "#f8f9fb", outline: "none" }}
-              onFocus={e => { e.target.style.borderColor = "#0052cc"; e.target.style.background = "#fff"; e.target.style.boxShadow = "0 0 0 2px rgba(0,82,204,0.12)"; }}
-              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.background = "#f8f9fb"; e.target.style.boxShadow = "none"; }}
+              placeholder="Tìm kiếm nhanh công việc, dự án... (Ctrl + K)"
+              className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-100/70 border border-transparent rounded-full focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all text-slate-700 placeholder:text-slate-400"
             />
           </div>
 
-          <div style={{ flex: 1 }} />
-
-          {/* Right icons */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-2">
             
-            {/* Notifications */}
-            <div style={{ position: "relative" }}>
-              <button 
+            {/* Quick AI Trigger */}
+            <button
+              onClick={() => setIsAiModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-700 hover:bg-indigo-100/70 border border-indigo-200/60 transition-all"
+            >
+              <Sparkles size={13} className="text-indigo-600" />
+              <span>Trợ lý AI</span>
+            </button>
+
+            {/* Notifications Dropdown */}
+            <div className="relative">
+              <button
                 onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: notifMenuOpen ? "#f1f5f9" : "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", color: "var(--text-secondary)" }}
-                onMouseEnter={e => (!notifMenuOpen && (e.currentTarget.style.background = "#f1f5f9"))}
-                onMouseLeave={e => (!notifMenuOpen && (e.currentTarget.style.background = "none"))}>
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors relative ${
+                  notifMenuOpen ? "bg-slate-100 text-slate-800" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+                title="Thông báo"
+              >
                 <Bell size={17} />
                 {notifCount > 0 && (
-                  <span style={{ position: "absolute", top: 5, right: 5, width: 8, height: 8, background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
                 )}
               </button>
 
               {notifMenuOpen && (
                 <div 
-                  style={{ position: "absolute", top: "calc(100% + 8px)", right: -50, width: 340, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", display: "flex", flexDirection: "column" }}
-                  onClick={e => e.stopPropagation()}
+                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50 animate-scale-in"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc" }}>
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Thông báo</h4>
-                    <button style={{ border: "none", background: "none", color: "#3b82f6", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Đánh dấu đã đọc</button>
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-xs text-slate-800">Thông báo mới</h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">3 chưa đọc</span>
+                    </div>
+                    <button className="text-[11px] font-semibold text-indigo-600 hover:underline">Đã đọc tất cả</button>
                   </div>
-                  <div style={{ maxHeight: 360, overflowY: "auto", padding: "8px 0" }}>
-                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, background: "#f0f9ff", borderLeft: "3px solid #3b82f6", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#e0f2fe"} onMouseLeave={e => e.currentTarget.style.background = "#f0f9ff"}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#bae6fd", color: "#0369a1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>AD</div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}><strong>Admin</strong> đã giao cho bạn task <span style={{ fontWeight: 600, color: "#0f172a" }}>"Thiết kế UI/UX"</span></p>
-                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>10 phút trước</p>
+
+                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer bg-indigo-50/20">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">AD</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-700 leading-snug">
+                          <strong>Quản trị viên</strong> đã giao cho bạn công việc <span className="font-semibold text-slate-900">"Thiết kế giao diện SaaS"</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> 10 phút trước</p>
                       </div>
                     </div>
-                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#fecaca", color: "#b91c1c", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>SYS</div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}>Dự án <span style={{ fontWeight: 600, color: "#0f172a" }}>"Website Thương mại điện tử"</span> sắp đến hạn.</p>
-                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>2 giờ trước</p>
+
+                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold shrink-0">SYS</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-700 leading-snug">
+                          Dự án <span className="font-semibold text-slate-900">Task-Management-App</span> có 2 công việc sắp đến hạn.
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> 1 giờ trước</p>
                       </div>
                     </div>
-                    <div style={{ padding: "12px 20px", display: "flex", gap: 12, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#bbf7d0", color: "#15803d", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, fontSize: 12 }}>HQ</div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.4 }}><strong>Hải Quân</strong> đã bình luận trong task <span style={{ fontWeight: 600, color: "#0f172a" }}>"Fix bug đăng nhập"</span></p>
-                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>Hôm qua lúc 15:30</p>
+
+                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
+                        <CheckCircle2 size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-700 leading-snug">
+                          Hải Quân đã hoàn thành công việc <span className="font-semibold text-slate-900">"API Unit Tests"</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> Hôm qua</p>
                       </div>
                     </div>
                   </div>
-                  <div style={{ padding: "12px", borderTop: "1px solid #f1f5f9", textAlign: "center" }}>
-                    <a href="/settings" style={{ color: "#64748b", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>Xem tất cả thông báo</a>
+
+                  <div className="p-2.5 border-t border-slate-100 text-center bg-slate-50/50">
+                    <Link href="/settings" className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+                      Xem tất cả hoạt động
+                    </Link>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Help */}
-            <button style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-secondary)" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
-              onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+            {/* Help Button */}
+            <button 
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              title="Trợ giúp & Hướng dẫn"
+            >
               <HelpCircle size={17} />
             </button>
 
-            {/* Divider */}
-            <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
-
-            {/* User avatar */}
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #667eea, #764ba2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", cursor: "pointer" }}
-              title={user?.fullName || user?.email}>
-              {initials}
+            {/* Mobile menu trigger */}
+            <div className="md:hidden flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-xs font-bold">
+                {initials}
+              </div>
             </div>
+
           </div>
         </header>
 
-        {/* Page Content */}
-        <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* Page Content View */}
+        <main className="flex-1 overflow-hidden flex flex-col relative pb-16 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* ── Mobile Bottom Navigation Bar ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 flex items-center justify-around px-2">
+        <Link href="/" className={`flex flex-col items-center gap-1 py-1 text-[11px] font-medium ${pathname === "/" ? "text-indigo-600 font-bold" : "text-slate-500"}`}>
+          <Home size={18} />
+          <span>Trang chủ</span>
+        </Link>
+        <Link href="/tasks" className={`flex flex-col items-center gap-1 py-1 text-[11px] font-medium ${pathname.startsWith("/tasks") ? "text-indigo-600 font-bold" : "text-slate-500"}`}>
+          <CheckSquare size={18} />
+          <span>Công việc</span>
+        </Link>
+        <Link href="/workspaces" className={`flex flex-col items-center gap-1 py-1 text-[11px] font-medium ${pathname.startsWith("/workspaces") ? "text-indigo-600 font-bold" : "text-slate-500"}`}>
+          <FolderKanban size={18} />
+          <span>Dự án</span>
+        </Link>
+        <Link href="/calendar" className={`flex flex-col items-center gap-1 py-1 text-[11px] font-medium ${pathname.startsWith("/calendar") ? "text-indigo-600 font-bold" : "text-slate-500"}`}>
+          <CalendarDays size={18} />
+          <span>Lịch</span>
+        </Link>
+        <button onClick={() => setIsAiModalOpen(true)} className="flex flex-col items-center gap-1 py-1 text-[11px] font-medium text-indigo-600">
+          <Sparkles size={18} />
+          <span>Trợ lý AI</span>
+        </button>
+      </div>
+
+      {/* ── Floating AI Assistant Trigger Button (Bottom Right) ── */}
+      <button
+        onClick={() => setIsAiModalOpen(true)}
+        className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+      >
+        <Sparkles size={15} className="animate-pulse" />
+        <span>✨ Trợ lý AI</span>
+      </button>
+
+      {/* AI Assistant Modal */}
+      <AiAssistantModal 
+        isOpen={isAiModalOpen} 
+        onClose={() => setIsAiModalOpen(false)} 
+      />
+
     </div>
   );
 }

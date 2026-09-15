@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import api from "@/lib/api";
+import CreateTaskModal from "@/components/CreateTaskModal";
 import { 
   addMonths, 
   subMonths, 
@@ -228,47 +229,14 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Quick Add Modal */}
-      {isAddModalOpen && (
-        <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <Plus size={18} className="text-blue-600" />
-                Thêm Công Việc Nhanh
-              </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition-colors">
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateTask} className="p-6">
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Tên công việc</label>
-                <input 
-                  autoFocus
-                  type="text" 
-                  value={newTaskTitle}
-                  onChange={e => setNewTaskTitle(e.target.value)}
-                  placeholder="Nhập tên công việc..."
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-              <div className="mb-6 flex items-center gap-3 text-sm font-medium text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <CalendarIcon size={16} className="text-blue-500" />
-                Đáo hạn: <span className="font-bold text-slate-800">{selectedDateForAdd ? format(selectedDateForAdd, 'dd/MM/yyyy') : ''}</span>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                  Hủy
-                </button>
-                <button type="submit" disabled={!newTaskTitle.trim()} className="px-5 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm shadow-blue-600/20 transition-all">
-                  Tạo Task
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Unified Task Creation Modal */}
+      <CreateTaskModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onTaskCreated={() => { if (selectedWsId) fetchTasks(selectedWsId); }}
+        defaultWorkspaceId={selectedWsId || undefined}
+        defaultDueDate={selectedDateForAdd ? format(selectedDateForAdd, "yyyy-MM-dd") : ""}
+      />
 
       {/* Task Detail Modal */}
       {selectedTask && (

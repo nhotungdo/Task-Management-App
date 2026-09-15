@@ -10,6 +10,7 @@ import {
   Trash2, Edit3, Send, Target
 } from "lucide-react";
 import api from "@/lib/api";
+import CreateTaskModal from "@/components/CreateTaskModal";
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval,
@@ -65,11 +66,25 @@ const STATUS_COLORS: Record<string, string> = {
   "Done": "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  "To Do": "Cần làm",
+  "In Progress": "Đang làm",
+  "In Review": "Chờ duyệt",
+  "Done": "Hoàn thành",
+};
+
 const PRIORITY_COLORS: Record<string, string> = {
   Low: "bg-blue-50 text-blue-600",
   Normal: "bg-slate-50 text-slate-600",
   Medium: "bg-amber-50 text-amber-700",
   High: "bg-red-50 text-red-600",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  Low: "Thấp",
+  Normal: "Bình thường",
+  Medium: "Trung bình",
+  High: "Cao",
 };
 
 const PRIORITY_ICONS: Record<string, string> = {
@@ -85,6 +100,19 @@ function Avatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" | "lg"
       {name.charAt(0).toUpperCase()}
     </div>
   );
+}
+
+// ─── Safe Date Helper ─────────────────────────────────────────────────────────
+
+function safeFormatDate(dateStr?: string | null, formatStr: string = "yyyy-MM-dd"): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime()) || d.getFullYear() < 1970) return "";
+    return format(d, formatStr);
+  } catch {
+    return "";
+  }
 }
 
 // ─── Task Detail Drawer ───────────────────────────────────────────────────────
@@ -105,28 +133,40 @@ function TaskDetailDrawer({
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [newComment, setNewComment] = useState("");
   const [postingComment, setPostingComment] = useState(false);
-  const [newTimeLog, setNewTimeLog] = useState({ hours: "", date: format(new Date(), "yyyy-MM-dd"), comment: "" });
+  const [newTimeLog, setNewTimeLog] = useState({ hours: "", date: safeFormatDate(new Date().toISOString(), "yyyy-MM-dd"), comment: "" });
   const [postingTimeLog, setPostingTimeLog] = useState(false);
   const [deletingTask, setDeletingTask] = useState(false);
 
   const loadDetail = useCallback(async () => {
+    if (!taskId) return;
     setLoading(true);
     try {
       const res = await api.get(`/Tasks/${taskId}`);
-      setDetail(res.data);
+      const data = res.data;
+      if (!data) return;
+
+      const normalizedDetail: TaskDetail = {
+        ...data,
+        dependencies: Array.isArray(data.dependencies) ? data.dependencies : [],
+        comments: Array.isArray(data.comments) ? data.comments : [],
+        timeLogs: Array.isArray(data.timeLogs) ? data.timeLogs : [],
+        attachments: Array.isArray(data.attachments) ? data.attachments : [],
+        assignees: Array.isArray(data.assignees) ? data.assignees : [],
+      };
+      setDetail(normalizedDetail);
       setEditedTask({
-        title: res.data.title,
-        description: res.data.description,
-        status: res.data.status,
-        priority: res.data.priority,
-        startDate: res.data.startDate ? format(new Date(res.data.startDate), "yyyy-MM-dd") : undefined,
-        dueDate: res.data.dueDate ? format(new Date(res.data.dueDate), "yyyy-MM-dd") : undefined,
-        progress: res.data.progress,
-        estimatedHours: res.data.estimatedHours,
-        isMilestone: res.data.isMilestone,
+        title: data.title || "",
+        description: data.description || "",
+        status: data.status || "To Do",
+        priority: data.priority || "Normal",
+        startDate: safeFormatDate(data.startDate, "yyyy-MM-dd") || undefined,
+        dueDate: safeFormatDate(data.dueDate, "yyyy-MM-dd") || undefined,
+        progress: typeof data.progress === "number" ? data.progress : 0,
+        estimatedHours: data.estimatedHours,
+        isMilestone: !!data.isMilestone,
       });
-    } catch {
-      console.error("Failed to load task detail");
+    } catch (err) {
+      console.error("Failed to load task detail:", err);
     } finally {
       setLoading(false);
     }
@@ -142,13 +182,13 @@ function TaskDetailDrawer({
     try {
       await api.put(`/Tasks/${taskId}`, {
         ...editedTask,
-        startDate: editedTask.startDate ? new Date(editedTask.startDate).toISOString() : null,
-        dueDate: editedTask.dueDate ? new Date(editedTask.dueDate).toISOString() : null,
+        startDate: editedTask.startDate?.trim() ? new Date(editedTask.startDate).toISOString() : null,
+        dueDate: editedTask.dueDate?.trim() ? new Date(editedTask.dueDate).toISOString() : null,
       });
       setIsEditing(false);
       loadDetail();
       onRefresh();
-    } catch { console.error("Failed to save task"); }
+    } catch (err) { console.error("Failed to save task:", err); }
   };
 
   const handlePostComment = async () => {
@@ -179,7 +219,7 @@ function TaskDetailDrawer({
         logDate: new Date(newTimeLog.date).toISOString(),
         comment: newTimeLog.comment || null,
       });
-      setNewTimeLog({ hours: "", date: format(new Date(), "yyyy-MM-dd"), comment: "" });
+      setNewTimeLog({ hours: "", date: safeFormatDate(new Date().toISOString(), "yyyy-MM-dd"), comment: "" });
       loadDetail();
     } catch { console.error("Failed to log time"); }
     finally { setPostingTimeLog(false); }
@@ -196,7 +236,7 @@ function TaskDetailDrawer({
     finally { setDeletingTask(false); }
   };
 
-  const totalLoggedHours = detail?.timeLogs.reduce((sum, tl) => sum + tl.hours, 0) ?? 0;
+  const totalLoggedHours = (detail?.timeLogs ?? []).reduce((sum, tl) => sum + (tl.hours || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -269,7 +309,7 @@ function TaskDetailDrawer({
                   }`}
                 >
                   {tab === "details" && <><List size={14}/> Chi tiết</>}
-                  {tab === "comments" && <><MessageSquare size={14}/> Bình luận <span className="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded-full">{detail.comments.length}</span></>}
+                  {tab === "comments" && <><MessageSquare size={14}/> Bình luận <span className="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded-full">{(detail.comments ?? []).length}</span></>}
                   {tab === "timelog" && <><Clock size={14}/> Time Log <span className="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded-full">{totalLoggedHours.toFixed(1)}h</span></>}
                 </button>
               ))}
@@ -324,7 +364,7 @@ function TaskDetailDrawer({
                         <input type="date" value={editedTask.startDate ?? ""} onChange={e => setEditedTask(p => ({ ...p, startDate: e.target.value }))}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" />
                       ) : (
-                        <p className="text-sm font-bold text-slate-700">{detail.startDate ? format(new Date(detail.startDate), "dd/MM/yyyy") : <span className="text-slate-400 font-normal">Chưa đặt</span>}</p>
+                        <p className="text-sm font-bold text-slate-700">{safeFormatDate(detail.startDate, "dd/MM/yyyy") || <span className="text-slate-400 font-normal">Chưa đặt</span>}</p>
                       )}
                     </div>
                     <div>
@@ -333,7 +373,7 @@ function TaskDetailDrawer({
                         <input type="date" value={editedTask.dueDate ?? ""} onChange={e => setEditedTask(p => ({ ...p, dueDate: e.target.value }))}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" />
                       ) : (
-                        <p className="text-sm font-bold text-slate-700">{detail.dueDate ? format(new Date(detail.dueDate), "dd/MM/yyyy") : <span className="text-slate-400 font-normal">Chưa đặt</span>}</p>
+                        <p className="text-sm font-bold text-slate-700">{safeFormatDate(detail.dueDate, "dd/MM/yyyy") || <span className="text-slate-400 font-normal">Chưa đặt</span>}</p>
                       )}
                     </div>
                   </div>
@@ -390,7 +430,7 @@ function TaskDetailDrawer({
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Người được giao</label>
                     <div className="flex flex-wrap gap-2">
-                      {detail.assignees.length > 0 ? detail.assignees.map(a => (
+                      {(detail.assignees ?? []).length > 0 ? (detail.assignees ?? []).map(a => (
                         <div key={a.taskAssignmentId} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5">
                           <Avatar name={a.userName} />
                           <span className="text-xs font-bold text-slate-700">{a.userName}</span>
@@ -402,11 +442,11 @@ function TaskDetailDrawer({
                   </div>
 
                   {/* Dependencies */}
-                  {detail.dependencies.length > 0 && (
+                  {(detail.dependencies ?? []).length > 0 && (
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Phụ thuộc</label>
                       <div className="space-y-2">
-                        {detail.dependencies.map(d => (
+                        {(detail.dependencies ?? []).map(d => (
                           <div key={d.taskDependencyId} className="flex items-center gap-2 text-sm">
                             <Link2 size={14} className="text-slate-400" />
                             <span className="font-bold text-indigo-600">{d.predecessorTitle}</span>
@@ -432,20 +472,20 @@ function TaskDetailDrawer({
               {/* ── COMMENTS TAB ── */}
               {activeTab === "comments" && (
                 <div className="p-6 flex flex-col gap-4">
-                  {detail.comments.length === 0 ? (
+                  {(detail.comments ?? []).length === 0 ? (
                     <div className="text-center py-10 text-slate-400">
                       <MessageSquare size={36} className="mx-auto mb-3 opacity-30" />
                       <p className="text-sm">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {detail.comments.map(c => (
+                      {(detail.comments ?? []).map(c => (
                         <div key={c.taskCommentId} className="flex gap-3 group">
                           <Avatar name={c.userName} size="md" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-bold text-slate-800">{c.userName}</span>
-                              <span className="text-xs text-slate-400">{format(new Date(c.createdAt), "dd/MM HH:mm")}</span>
+                              <span className="text-xs text-slate-400">{safeFormatDate(c.createdAt, "dd/MM HH:mm")}</span>
                             </div>
                             <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{c.content}</p>
                           </div>
@@ -520,9 +560,9 @@ function TaskDetailDrawer({
                   </div>
 
                   {/* Log list */}
-                  {detail.timeLogs.length > 0 ? (
+                  {(detail.timeLogs ?? []).length > 0 ? (
                     <div className="space-y-2">
-                      {detail.timeLogs.map(tl => (
+                      {(detail.timeLogs ?? []).map(tl => (
                         <div key={tl.timeLogId} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl">
                           <div className="flex items-center gap-3">
                             <Avatar name={tl.userName} size="sm" />
@@ -533,7 +573,7 @@ function TaskDetailDrawer({
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-black text-indigo-600">{tl.hours}h</p>
-                            <p className="text-xs text-slate-400">{format(new Date(tl.logDate), "dd/MM/yyyy")}</p>
+                            <p className="text-xs text-slate-400">{safeFormatDate(tl.logDate, "dd/MM/yyyy")}</p>
                           </div>
                         </div>
                       ))}
@@ -739,10 +779,10 @@ export default function WorkspaceDetail() {
   const tabs = [
     { id: "overview", label: "Tổng quan", icon: BarChart3 },
     { id: "board", label: "Bảng (Kanban)", icon: LayoutGrid },
-    { id: "gantt", label: "Gantt Chart", icon: GitCommit },
+    { id: "gantt", label: "Biểu đồ tiến độ", icon: GitCommit },
     { id: "list", label: "Danh sách", icon: List },
     { id: "calendar", label: "Lịch", icon: CalendarIcon },
-    { id: "workload", label: "Workload", icon: Users },
+    { id: "workload", label: "Khối lượng công việc", icon: Users },
   ];
 
   // ── Completion stats for dashboard ──
@@ -764,58 +804,81 @@ export default function WorkspaceDetail() {
         />
       )}
 
-      {/* ── GanttPRO-style Header ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+      {/* ── Modern SaaS Header ── */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 shrink-0 z-10">
         {/* Project name bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", height: 52, borderBottom: "1px solid var(--border-light)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: "linear-gradient(135deg, #0052cc, #0073e6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{workspace.name.charAt(0).toUpperCase()}</span>
+        <div className="flex justify-between items-center px-6 h-16 border-b border-slate-100">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-extrabold text-sm shadow-sm shadow-indigo-200 shrink-0">
+              {workspace.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{workspace.name}</h2>
-              {workspace.description && <p style={{ fontSize: 11, color: "var(--text-tertiary)", margin: 0 }}>{workspace.description}</p>}
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">{workspace.name}</h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Đang hoạt động</span>
+              </div>
+              {workspace.description && <p className="text-xs text-slate-400 mt-0.5">{workspace.description}</p>}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Members avatars */}
-            <div style={{ display: "flex" }}>
+          <div className="flex items-center gap-2.5">
+            {/* Members avatars stack */}
+            <div className="flex -space-x-2 overflow-hidden items-center pr-2">
               {members.slice(0, 4).map((m, i) => {
-                const colors = ["#0052cc","#7c3aed","#059669","#d97706"];
+                const colors = ["bg-indigo-500", "bg-violet-500", "bg-emerald-500", "bg-amber-500"];
                 return (
-                  <div key={m.userId}
-                    style={{ width: 26, height: 26, borderRadius: "50%", border: "2px solid #fff", background: colors[i % 4], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff", marginLeft: i === 0 ? 0 : -6, zIndex: 4 - i }}
-                    title={m.fullName || m.email}>
+                  <div 
+                    key={m.userId}
+                    className={`w-7 h-7 rounded-full ring-2 ring-white ${colors[i % 4]} flex items-center justify-center text-[10px] font-bold text-white shadow-xs`}
+                    title={m.fullName || m.email}
+                  >
                     {(m.fullName || m.email).charAt(0).toUpperCase()}
                   </div>
                 );
               })}
               {members.length > 4 && (
-                <div style={{ width: 26, height: 26, borderRadius: "50%", border: "2px solid #fff", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--text-secondary)", marginLeft: -6 }}>+{members.length - 4}</div>
+                <div className="w-7 h-7 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-xs">
+                  +{members.length - 4}
+                </div>
               )}
             </div>
-            <button onClick={handleAiAnalyze} className="btn-secondary"
-              style={{ background: "#fff8f0", borderColor: "#fed7aa", color: "#c2410c", fontSize: 12 }}>
-              <ShieldAlert size={13} /> Phân tích rủi ro AI
+            <button 
+              onClick={handleAiAnalyze} 
+              className="btn-secondary text-xs py-1.5 px-3 bg-amber-50/70 border-amber-200 text-amber-800 hover:bg-amber-100/70"
+            >
+              <ShieldAlert size={14} className="text-amber-600" /> Phân tích rủi ro AI
             </button>
-            <button onClick={() => setIsInviteModalOpen(true)} className="btn-secondary" style={{ fontSize: 12 }}>
+            <button 
+              onClick={() => setIsInviteModalOpen(true)} 
+              className="btn-secondary text-xs py-1.5 px-3"
+            >
               Chia sẻ
             </button>
-            <button onClick={() => setIsModalOpen(true)} className="btn-primary" style={{ fontSize: 12 }}>
-              <Plus size={13} /> Thêm task
+            <button 
+              onClick={() => setIsModalOpen(true)} 
+              className="btn-primary text-xs py-1.5 px-3.5"
+            >
+              <Plus size={14} /> Thêm task
             </button>
           </div>
         </div>
 
-        {/* ── GanttPRO Tab Bar ── */}
-        <div style={{ display: "flex", padding: "0 20px", overflowX: "auto" }}>
+        {/* ── Modern Tab Bar ── */}
+        <div className="flex px-6 overflow-x-auto gap-1">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-                className={`gp-tab ${isActive ? "active" : ""}`}>
-                <Icon size={14} /> {tab.label}
+              <button 
+                key={tab.id} 
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
+                  isActive 
+                    ? "border-indigo-600 text-indigo-600 font-bold" 
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+                }`}
+              >
+                <Icon size={14} className={isActive ? "text-indigo-600" : "text-slate-400"} /> 
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -1312,41 +1375,57 @@ export default function WorkspaceDetail() {
                   <div key={status} className="min-w-[280px] w-72 flex-shrink-0 flex flex-col"
                     onDragOver={handleDragOver} onDrop={e => handleDrop(e, status)}>
                     <div className={`flex items-center justify-between mb-3 px-1 py-2 rounded-xl ${headerColors[status]}`}>
-                      <h4 className="font-black text-sm uppercase tracking-wide">{status}</h4>
+                      <h4 className="font-black text-sm uppercase tracking-wide">{STATUS_LABELS[status] || status}</h4>
                       <span className="text-xs font-black w-6 h-6 rounded-full bg-white/70 flex items-center justify-center shadow-sm">{columnTasks.length}</span>
                     </div>
                     <div className={`space-y-3 flex-grow rounded-2xl min-h-[200px] p-3 bg-slate-100/50 border ${colColors[status]}`}>
                       {columnTasks.map(task => (
-                        <div key={task.taskId} draggable onDragStart={e => handleDragStart(e, task.taskId)}
+                        <div 
+                          key={task.taskId} 
+                          draggable 
+                          onDragStart={e => handleDragStart(e, task.taskId)}
                           onClick={() => setSelectedTaskId(task.taskId)}
-                          className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group active:cursor-grabbing">
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-bold text-sm text-slate-800 leading-snug flex-1 mr-2">{task.title}</h5>
-                            <MoreVertical size={15} className="text-slate-300 shrink-0 group-hover:text-slate-500" />
+                          className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-indigo-300 transition-all duration-200 cursor-pointer group active:cursor-grabbing"
+                        >
+                          <div className="flex justify-between items-start mb-2.5">
+                            <h5 className="font-bold text-[13px] text-slate-800 leading-snug flex-1 mr-2 group-hover:text-indigo-600 transition-colors">
+                              {task.title}
+                            </h5>
+                            <MoreVertical size={14} className="text-slate-300 shrink-0 group-hover:text-slate-500" />
                           </div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] ?? ""}`}>
-                              {PRIORITY_ICONS[task.priority]} {task.priority}
+                          
+                          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority] ?? ""}`}>
+                              {PRIORITY_ICONS[task.priority]} {PRIORITY_LABELS[task.priority] || task.priority}
                             </span>
-                            {task.isMilestone && <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">◆ Milestone</span>}
+                            {task.isMilestone && (
+                              <span className="text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+                                ◆ Cột mốc
+                              </span>
+                            )}
                           </div>
+
                           {task.progress > 0 && (
                             <div className="mb-3">
                               <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${task.progress}%` }} />
+                                <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all" style={{ width: `${task.progress}%` }} />
                               </div>
-                              <p className="text-[10px] text-slate-400 mt-0.5 text-right">{task.progress}%</p>
+                              <p className="text-[10px] font-semibold text-slate-400 mt-1 text-right">{task.progress}%</p>
                             </div>
                           )}
-                          <div className="flex justify-between items-center text-xs text-slate-400 font-medium">
-                            <span className="flex items-center gap-1"><CalendarIcon size={11}/> {task.dueDate ? format(new Date(task.dueDate), "dd/MM") : "—"}</span>
+
+                          <div className="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-100">
+                            <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                              <CalendarIcon size={12} className="text-slate-400" /> 
+                              {task.dueDate ? format(new Date(task.dueDate), "dd/MM") : "—"}
+                            </span>
                             {task.ownerId && usersMap[task.ownerId] && <Avatar name={usersMap[task.ownerId]} />}
                           </div>
                         </div>
                       ))}
                       <button onClick={() => { setNewTask(p => ({ ...p, status })); setIsModalOpen(true); }}
                         className="w-full py-2.5 flex items-center justify-center gap-2 text-slate-400 font-bold text-sm hover:bg-slate-200 rounded-xl transition-colors border border-dashed border-slate-300 hover:text-slate-600">
-                        <Plus size={15} /> Thêm task
+                        <Plus size={15} /> Thêm công việc
                       </button>
                     </div>
                   </div>
@@ -1357,70 +1436,15 @@ export default function WorkspaceDetail() {
         )}
       </div>
 
-      {/* ── Task Creation Modal ── */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-5 border-b border-slate-100">
-              <h3 className="font-bold text-lg text-slate-800">Thêm công việc mới</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-            </div>
-            <form onSubmit={handleCreateTask} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tên công việc <span className="text-red-500">*</span></label>
-                <input type="text" required value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Nhập tên công việc..." />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Trạng thái</label>
-                  <select value={newTask.status} onChange={e => setNewTask({ ...newTask, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white">
-                    <option value="To Do">Cần làm</option>
-                    <option value="In Progress">Đang làm</option>
-                    <option value="In Review">Chờ duyệt</option>
-                    <option value="Done">Hoàn thành</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Mức độ</label>
-                  <select value={newTask.priority} onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white">
-                    <option value="Low">Thấp</option>
-                    <option value="Normal">Bình thường</option>
-                    <option value="Medium">Trung bình</option>
-                    <option value="High">Cao</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Ngày bắt đầu</label>
-                  <input type="date" value={newTask.startDate} onChange={e => setNewTask({ ...newTask, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Ngày đến hạn</label>
-                  <input type="date" value={newTask.dueDate} onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Ước tính (giờ)</label>
-                <input type="number" step="0.5" min="0" value={newTask.estimatedHours}
-                  onChange={e => setNewTask({ ...newTask, estimatedHours: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white"
-                  placeholder="Ví dụ: 8" />
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50">Hủy</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors">Tạo công việc</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* ── Unified Task Creation Modal ── */}
+      <CreateTaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTaskCreated={() => loadData()}
+        defaultWorkspaceId={workspaceId}
+        lockWorkspace
+        defaultStatus={newTask.status || "To Do"}
+      />
 
       {/* ── AI Risk Modal ── */}
       {isAiRiskModalOpen && (

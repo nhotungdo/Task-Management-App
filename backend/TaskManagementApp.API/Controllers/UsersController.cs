@@ -38,9 +38,20 @@ public class UsersController : ControllerBase
         {
             query = query.Where(u => u.Email.Contains(search) || (u.FullName ?? "").Contains(search));
         }
-        var users = await query.Select(u => new { u.UserId, u.Email, u.FullName, u.Role, u.CreatedAt })
-            .OrderBy(u => u.Email)
-            .ToListAsync();
+
+        var users = await query.Select(u => new {
+            u.UserId,
+            u.Email,
+            u.FullName,
+            u.Role,
+            u.CreatedAt,
+            TotalTasks = u.TaskAssignments.Count() + _db.Tasks.Count(t => t.OwnerId == u.UserId && !_db.TaskAssignments.Any(ta => ta.TaskId == t.TaskId && ta.UserId == u.UserId)),
+            CompletedTasks = u.TaskAssignments.Count(ta => ta.Task.Status == "Done") + _db.Tasks.Count(t => t.OwnerId == u.UserId && t.Status == "Done" && !_db.TaskAssignments.Any(ta => ta.TaskId == t.TaskId && ta.UserId == u.UserId)),
+            TotalHours = u.TimeLogs.Sum(tl => (decimal?)tl.Hours) ?? 0,
+            WorkspacesCount = u.WorkspaceMembers.Count()
+        })
+        .OrderBy(u => u.Email)
+        .ToListAsync();
         return Ok(users);
     }
 }

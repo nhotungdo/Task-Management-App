@@ -10,8 +10,8 @@ import {
 const FEATURES = [
   {
     icon: BarChart2,
-    title: "Gantt Chart nâng cao",
-    desc: "Trực quan hóa tiến độ dự án với thanh Gantt tương tác, hỗ trợ phụ thuộc và kéo thả.",
+    title: "Biểu đồ tiến độ nâng cao",
+    desc: "Trực quan hóa tiến độ dự án với biểu đồ tương tác, hỗ trợ phụ thuộc và kéo thả.",
     color: "#0052cc",
     bg: "#e6f0ff",
   },
@@ -112,7 +112,7 @@ export default function WelcomePage() {
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "#e6f0ff", borderRadius: 4, marginBottom: 20 }}>
               <Zap size={12} color="#0052cc" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#0052cc" }}>Phiên bản 2.0 — Gantt Chart Pro</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0052cc" }}>Phiên bản 2.0 — Biểu đồ tiến độ Pro</span>
             </div>
 
             <h1 style={{ fontSize: 44, fontWeight: 900, color: "#172b4d", lineHeight: 1.15, marginBottom: 18, letterSpacing: "-0.03em" }}>
@@ -121,7 +121,7 @@ export default function WelcomePage() {
             </h1>
 
             <p style={{ fontSize: 16, color: "#5e6c84", lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
-              Gantt Chart tương tác, Kanban kéo thả, theo dõi thời gian và cộng tác thời gian thực — tất cả trong một nền tảng duy nhất.
+              Biểu đồ tiến độ tương tác, Kanban kéo thả, theo dõi thời gian và cộng tác thời gian thực — tất cả trong một nền tảng duy nhất.
             </p>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -154,7 +154,7 @@ export default function WelcomePage() {
               <div style={{ display: "flex" }}>
                 {/* Mock sidebar */}
                 <div style={{ width: 160, background: "#1e2a3b", padding: "12px 0", minHeight: 280 }}>
-                  {["Tổng quan","Dự án","My Tasks","Gantt","Báo cáo"].map((item, i) => (
+                  {["Tổng quan","Dự án","My Tasks","Tiến độ","Báo cáo"].map((item, i) => (
                     <div key={item} style={{ padding: "7px 16px", fontSize: 11, color: i === 2 ? "#fff" : "#6b85a3", background: i === 2 ? "#0052cc" : "transparent", margin: "1px 8px", borderRadius: 4 }}>
                       {item}
                     </div>
@@ -175,7 +175,7 @@ export default function WelcomePage() {
                       </div>
                     ))}
                   </div>
-                  {/* Gantt mock */}
+                  {/* Timeline mock */}
                   {[0.7, 0.4, 0.9, 0.55, 0.3].map((w, i) => (
                     <div key={i} style={{ height: 26, marginBottom: 3, display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: 60, height: 8, background: "#e2e8f0", borderRadius: 2 }} />

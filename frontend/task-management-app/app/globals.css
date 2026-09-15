@@ -4,56 +4,73 @@
    GanttPRO Design System Tokens
 ══════════════════════════════════════════════ */
 :root {
+  /* Brand Colors */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: #eef2ff;
+  --secondary: #8b5cf6;
+  --secondary-hover: #7c3aed;
+  --secondary-light: #f5f3ff;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --blue: #6366f1;
+  --blue-hover: #4f46e5;
+  --blue-light: #eef2ff;
+  --blue-text: #4f46e5;
+
   /* Sidebar */
-  --sidebar-bg: #1e2a3b;
-  --sidebar-hover: #263447;
-  --sidebar-active: #0052cc;
-  --sidebar-text: #8fa3c0;
-  --sidebar-text-active: #ffffff;
-  --sidebar-border: rgba(255,255,255,0.06);
-  --sidebar-width: 240px;
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #f8fafc;
+  --sidebar-active: #eef2ff;
+  --sidebar-text: #64748b;
+  --sidebar-text-active: #4f46e5;
+  --sidebar-border: #e2e8f0;
+  --sidebar-width: 250px;
+  --sidebar-width-collapsed: 72px;
 
   /* Top bar */
-  --topbar-bg: #ffffff;
-  --topbar-border: #e8edf3;
-  --topbar-height: 52px;
+  --topbar-bg: rgba(255, 255, 255, 0.88);
+  --topbar-border: #e2e8f0;
+  --topbar-height: 58px;
 
   /* Content */
-  --content-bg: #f4f5f7;
+  --content-bg: #f8fafc;
   --surface: #ffffff;
-  --surface-hover: #f8f9fb;
+  --surface-hover: #f8fafc;
+  --surface-raised: #f8fafc;
   --border: #e2e8f0;
   --border-light: #f1f5f9;
 
-  /* Brand Colors */
-  --blue: #0052cc;
-  --blue-hover: #0047b3;
-  --blue-light: #e6f0ff;
-  --blue-text: #0052cc;
-
   /* Status Colors */
-  --status-todo: #6b7280;
+  --status-todo: #64748b;
   --status-inprogress: #f59e0b;
   --status-review: #8b5cf6;
-  --status-done: #10b981;
+  --status-done: #22c55e;
 
   /* Priority Colors */
-  --priority-low: #6366f1;
-  --priority-normal: #6b7280;
+  --priority-low: #3b82f6;
+  --priority-normal: #64748b;
   --priority-medium: #f59e0b;
   --priority-high: #ef4444;
 
+  /* Semantic Colors */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+
   /* Text */
-  --text-primary: #172b4d;
-  --text-secondary: #5e6c84;
-  --text-tertiary: #97a0af;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
   --text-white: #ffffff;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-  --shadow-xl: 0 20px 40px rgba(0,0,0,0.15);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -3px rgba(15, 23, 42, 0.03);
+  --shadow-xl: 0 20px 40px -6px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 8px 20px -4px rgba(99, 102, 241, 0.28);
 }
 
 /* ══════════════════════════════════════════════
@@ -88,7 +105,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: #9aacbf; }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Sidebar
+   Modern SaaS Sidebar & Navigation
 ══════════════════════════════════════════════ */
 .gp-sidebar {
   width: var(--sidebar-width);
@@ -98,105 +115,164 @@ body {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--sidebar-border);
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gp-sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+  min-width: var(--sidebar-width-collapsed);
 }
 
 .gp-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  margin: 1px 8px;
-  border-radius: 6px;
+  gap: 12px;
+  padding: 9px 14px;
+  margin: 2px 10px;
+  border-radius: 12px;
   color: var(--sidebar-text);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
 
 .gp-nav-item:hover {
   background: var(--sidebar-hover);
-  color: #c8d6e8;
+  color: var(--text-primary);
 }
 
 .gp-nav-item.active {
   background: var(--sidebar-active);
   color: var(--sidebar-text-active);
+  font-weight: 600;
 }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Button Styles
+   Modern Button Styles
 ══════════════════════════════════════════════ */
 .btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: var(--blue);
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--primary-gradient);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-primary:hover {
-  background: var(--blue-hover);
-  box-shadow: 0 2px 8px rgba(0, 82, 204, 0.3);
+  opacity: 0.95;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
   background: #fff;
   color: var(--text-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.15s ease;
 }
 
 .btn-secondary:hover {
   background: var(--surface-hover);
-  border-color: #c1cad6;
+  border-color: #cbd5e1;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Card / Panel
+   Modern SaaS Card & Glassmorphism
 ══════════════════════════════════════════════ */
-.gp-card {
+.gp-card, .saas-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 16px;
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.gp-card:hover, .saas-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
 }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Status / Priority Pills
+   Status / Priority Pills
 ══════════════════════════════════════════════ */
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 8px;
-  border-radius: 3px;
+  padding: 3px 10px;
+  border-radius: 9999px;
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
-.status-todo    { background: #f1f3f5; color: #495057; }
-.status-doing   { background: #fff8e6; color: #d97706; }
-.status-review  { background: #f3f0ff; color: #7c3aed; }
-.status-done    { background: #e6faf3; color: #059669; }
+.status-todo    { background: #f1f5f9; color: #475569; }
+.status-doing   { background: #fef3c7; color: #b45309; }
+.status-review  { background: #ede9fe; color: #6d28d9; }
+.status-done    { background: #dcfce7; color: #15803d; }
 
 /* ══════════════════════════════════════════════
    GanttPRO Input
@@ -214,39 +290,40 @@ body {
 }
 
 .gp-input:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .gp-input::placeholder { color: var(--text-tertiary); }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Select
+   Modern Select
 ══════════════════════════════════════════════ */
 .gp-select {
-  padding: 6px 28px 6px 10px;
+  padding: 7px 32px 7px 12px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 13px;
   color: var(--text-primary);
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aacbf' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
   appearance: none;
   outline: none;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .gp-select:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(0,82,204,0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Tab Bar
+   Modern Tab Bar
 ══════════════════════════════════════════════ */
 .gp-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
@@ -261,42 +338,45 @@ body {
   border-right: none;
 }
 
-.gp-tab:hover { color: var(--text-primary); border-bottom-color: #c1cad6; }
-.gp-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+.gp-tab:hover { color: var(--text-primary); border-bottom-color: #cbd5e1; }
+.gp-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Modal Overlay
+   Modern Modal Overlay
 ══════════════════════════════════════════════ */
 .gp-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(23, 43, 77, 0.5);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  animation: fadeIn 0.2s ease;
 }
 
 .gp-modal {
   background: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
   box-shadow: var(--shadow-xl);
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   overflow: hidden;
-  animation: modalIn 0.2s ease;
+  border: 1px solid var(--border);
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gp-modal-lg { max-width: 680px; }
+.gp-modal-lg { max-width: 720px; }
 
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+@keyframes modalPopIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ══════════════════════════════════════════════
-   Drawer
+   Modern Slide-over Drawer
 ══════════════════════════════════════════════ */
 .gp-drawer {
   position: fixed;
@@ -307,44 +387,47 @@ body {
 
 .gp-drawer-backdrop {
   flex: 1;
-  background: rgba(23, 43, 77, 0.4);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
 }
 
 .gp-drawer-panel {
-  width: 540px;
+  width: 560px;
+  max-width: 90vw;
   background: #fff;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.12);
-  animation: drawerIn 0.22s ease;
+  box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
+  animation: drawerSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes drawerIn {
-  from { transform: translateX(40px); opacity: 0; }
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); opacity: 0.5; }
   to   { transform: translateX(0); opacity: 1; }
 }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Gantt Grid
+   Gantt Grid
 ══════════════════════════════════════════════ */
 .gantt-row {
-  height: 40px;
-  border-bottom: 1px solid #eef0f3;
+  height: 44px;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   transition: background 0.1s;
 }
 
-.gantt-row:hover { background: #f8f9fb; }
+.gantt-row:hover { background: #f8fafc; }
 
 /* ══════════════════════════════════════════════
-   GanttPRO Table
+   Modern Table
 ══════════════════════════════════════════════ */
 .gp-table { width: 100%; border-collapse: collapse; }
 .gp-table th {
-  padding: 8px 12px;
-  background: #f8f9fb;
+  padding: 10px 14px;
+  background: #f8fafc;
   border-bottom: 1px solid var(--border);
   font-size: 11px;
   font-weight: 600;
@@ -355,7 +438,7 @@ body {
   white-space: nowrap;
 }
 .gp-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-light);
   font-size: 13px;
   color: var(--text-primary);
@@ -369,17 +452,162 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ══════════════════════════════════════════════
-   Progress Bar
+   Modern Progress Bar
 ══════════════════════════════════════════════ */
 .gp-progress-track {
   height: 6px;
-  background: #e8edf3;
-  border-radius: 3px;
+  background: #e2e8f0;
+  border-radius: 9999px;
   overflow: hidden;
 }
 .gp-progress-fill {
   height: 100%;
-  border-radius: 3px;
-  background: var(--blue);
-  transition: width 0.4s ease;
+  border-radius: 9999px;
+  background: var(--primary-gradient);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ══════════════════════════════════════════════
+   Rich Animation Library — Team / Settings / Tasks
+══════════════════════════════════════════════ */
+
+/* Float — gentle up-down bob */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+.animate-float { animation: float 3.5s ease-in-out infinite; }
+
+/* Spin slow — 8-second full rotation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+/* Pop in — scale from small with overshoot */
+@keyframes pop-in {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.animate-pop-in { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Shimmer — sweeping highlight */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+/* Pulse glow — breathing box-shadow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.12); }
+}
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* Danger pulse glow — red breathing */
+@keyframes danger-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15); }
+}
+.animate-danger-glow { animation: danger-glow 2s ease-in-out infinite; }
+
+/* Stagger fade-up — cards appearing */
+@keyframes stagger-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-stagger { animation: stagger-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Slide progress — bar fills from left */
+@keyframes slide-progress {
+  from { width: 0%; }
+}
+.animate-progress { animation: slide-progress 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* SVG ring fill animation */
+@keyframes ring-fill {
+  from { stroke-dashoffset: var(--ring-circumference, 188); }
+}
+.animate-ring { animation: ring-fill 1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Tab slide in from right */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-right { animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Bounce in — for toasts */
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  60%  { transform: translateY(4px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Counter up - number reveal */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-count { animation: count-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Orb blob gradient animation */
+@keyframes orb-move {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.95); }
+}
+.animate-orb { animation: orb-move 8s ease-in-out infinite; }
+
+/* Slide in from bottom */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Ripple effect */
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.4; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.ripple-effect { position: relative; overflow: hidden; }
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transform: scale(0);
+}
+.ripple-effect:active::after { animation: ripple 0.4s ease-out; }
+
+/* Overdue border pulse */
+@keyframes overdue-pulse {
+  0%, 100% { border-color: #fca5a5; }
+  50%       { border-color: #ef4444; }
+}
+.animate-overdue { animation: overdue-pulse 2s ease-in-out infinite; }
+
+/* Fade in up with delay utility classes */
+.delay-0   { animation-delay: 0ms; }
+.delay-50  { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-350 { animation-delay: 350ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }

@@ -112,7 +112,9 @@ public class TasksController : ControllerBase
             .Include(t => t.TaskAssignments).ThenInclude(a => a.User)
             .FirstOrDefaultAsync(t => t.TaskId == id);
         if (task == null) return NotFound();
-        var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId);
+        var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId)
+                       || await _db.Workspaces.AnyAsync(w => w.WorkspaceId == task.WorkspaceId && w.OwnerId == userId)
+                       || task.OwnerId == userId;
         if (!isMember) return Forbid();
 
         return Ok(new {
@@ -131,31 +133,31 @@ public class TasksController : ControllerBase
             task.WorkspaceId,
             task.CreatedAt,
             task.UpdatedAt,
-            Dependencies = task.Predecessors.Select(d => new {
+            Dependencies = (task.Predecessors ?? Enumerable.Empty<TaskDependency>()).Select(d => new {
                 d.TaskDependencyId,
                 d.PredecessorTaskId,
-                PredecessorTitle = d.PredecessorTask.Title,
+                PredecessorTitle = d.PredecessorTask != null ? d.PredecessorTask.Title : "N/A",
                 d.Type,
                 d.LagDays
             }),
-            Comments = task.Comments.OrderBy(c => c.CreatedAt).Select(c => new {
+            Comments = (task.Comments ?? Enumerable.Empty<TaskComment>()).OrderBy(c => c.CreatedAt).Select(c => new {
                 c.TaskCommentId,
                 c.Content,
                 c.CreatedAt,
                 c.UpdatedAt,
                 UserId = c.UserId,
-                UserName = c.User.FullName ?? c.User.Email
+                UserName = c.User != null ? (c.User.FullName ?? c.User.Email) : "Thành viên"
             }),
-            TimeLogs = task.TimeLogs.OrderByDescending(tl => tl.LogDate).Select(tl => new {
+            TimeLogs = (task.TimeLogs ?? Enumerable.Empty<TimeLog>()).OrderByDescending(tl => tl.LogDate).Select(tl => new {
                 tl.TimeLogId,
                 tl.Hours,
                 tl.LogDate,
                 tl.Comment,
                 tl.CreatedAt,
                 UserId = tl.UserId,
-                UserName = tl.User.FullName ?? tl.User.Email
+                UserName = tl.User != null ? (tl.User.FullName ?? tl.User.Email) : "Thành viên"
             }),
-            Attachments = task.Attachments.Select(a => new {
+            Attachments = (task.Attachments ?? Enumerable.Empty<TaskAttachment>()).Select(a => new {
                 a.TaskAttachmentId,
                 a.FileName,
                 a.FileUrl,
@@ -163,11 +165,11 @@ public class TasksController : ControllerBase
                 a.FileSizeBytes,
                 a.UploadedAt
             }),
-            Assignees = task.TaskAssignments.Select(a => new {
+            Assignees = (task.TaskAssignments ?? Enumerable.Empty<TaskAssignment>()).Select(a => new {
                 a.TaskAssignmentId,
                 a.UserId,
-                UserName = a.User.FullName ?? a.User.Email,
-                UserEmail = a.User.Email
+                UserName = a.User != null ? (a.User.FullName ?? a.User.Email) : "Thành viên",
+                UserEmail = a.User != null ? a.User.Email : ""
             })
         });
     }

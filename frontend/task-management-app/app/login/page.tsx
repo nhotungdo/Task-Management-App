@@ -9,7 +9,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Layers, CheckCircle, BarChart2, Us
 import { GoogleLogin } from '@react-oauth/google';
 
 const FEATURES = [
-  { icon: BarChart2, text: "Gantt Chart & Báo cáo trực quan" },
+  { icon: BarChart2, text: "Biểu đồ tiến độ & Báo cáo trực quan" },
   { icon: GitBranch, text: "Quản lý phụ thuộc nhiệm vụ" },
   { icon: Users, text: "Cộng tác nhóm thời gian thực" },
   { icon: CheckCircle, text: "Theo dõi tiến độ & thời gian" },
@@ -145,7 +145,7 @@ export default function LoginPage() {
               <span style={{ color: "#4da6ff" }}>chuyên nghiệp</span>
             </h2>
             <p style={{ fontSize: 14, color: "#8fa3c0", lineHeight: 1.6 }}>
-              Từ Gantt Chart đến Kanban, từ báo cáo đến cộng tác thời gian thực — tất cả trong một nền tảng.
+              Từ biểu đồ tiến độ đến Kanban, từ báo cáo đến cộng tác thời gian thực — tất cả trong một nền tảng.
             </p>
           </div>
 

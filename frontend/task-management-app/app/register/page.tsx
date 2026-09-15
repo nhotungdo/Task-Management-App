@@ -10,7 +10,7 @@ import { GoogleLogin } from '@react-oauth/google';
 
 const BENEFITS = [
   { icon: CheckCircle, text: "Không cần thẻ tín dụng" },
-  { icon: BarChart2, text: "Gantt Chart & báo cáo đầy đủ" },
+  { icon: BarChart2, text: "Biểu đồ tiến độ & báo cáo đầy đủ" },
   { icon: GitBranch, text: "Quản lý phụ thuộc task thông minh" },
   { icon: Users, text: "Cộng tác nhóm không giới hạn" },
 ];
@@ -77,7 +77,7 @@ export default function RegisterPage() {
               <span style={{ color: "#4da6ff" }}>30 giây</span>
             </h2>
             <p style={{ fontSize: 14, color: "#8fa3c0", lineHeight: 1.6 }}>
-              Tạo tài khoản và ngay lập tức có thể tạo dự án, Gantt Chart và mời đồng đội tham gia.
+              Tạo tài khoản và ngay lập tức có thể tạo dự án, biểu đồ tiến độ và mời đồng đội tham gia.
             </p>
           </div>
 

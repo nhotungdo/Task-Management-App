@@ -15,7 +15,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: "DoneIt — Phần mềm quản lý dự án chuyên nghiệp",
-  description: "Gantt Chart, Kanban, Time Tracking và cộng tác thời gian thực cho đội nhóm hiện đại.",
+  description: "Biểu đồ tiến độ, Kanban, Time Tracking và cộng tác thời gian thực cho đội nhóm hiện đại.",
 };
 
 export default function RootLayout({
