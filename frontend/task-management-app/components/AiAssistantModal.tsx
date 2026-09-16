@@ -1,7 +1,7 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Sparkles, X, Send, Bot, ArrowRight, Loader2 } from "lucide-react";
 
 interface AiAssistantModalProps {
@@ -14,6 +14,8 @@ interface Message {
   content: string;
   actions?: { label: string; action: string }[];
 }
+
+const API_URL = "/api/ai-assistant";
 
 export default function AiAssistantModal({ isOpen, onClose }: AiAssistantModalProps) {
   const [input, setInput] = useState("");
@@ -30,9 +32,31 @@ export default function AiAssistantModal({ isOpen, onClose }: AiAssistantModalPr
     },
   ]);
 
-  if (!isOpen) return null;
+  const callApi = useCallback(async (userMessage: string): Promise<string> => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
 
-  const handleSend = (text?: string) => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API error:", response.status, errorData);
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.content ?? "Xin lỗi, mình không nhận được phản hồi từ mô hình AI.";
+    } catch (err) {
+      console.error("API call failed:", err);
+      return "⚠️ Đã có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.";
+    }
+  }, []);
+
+  const handleSend = async (text?: string) => {
     const query = text || input;
     if (!query.trim() || loading) return;
 
@@ -41,32 +65,13 @@ export default function AiAssistantModal({ isOpen, onClose }: AiAssistantModalPr
     if (!text) setInput("");
     setLoading(true);
 
-    setTimeout(() => {
-      let reply = "";
-      if (query.toLowerCase().includes("tóm tắt") || query === "summary") {
-        reply = "📊 **Tóm tắt công việc ngày hôm nay:**\n\n" +
-          "• **Tổng công việc:** Bạn có 4 việc đang thực hiện.\n" +
-          "• **Ưu tiên cao:** 1 việc cần giải quyết trước 17:00 (Thiết kế Landing Page).\n" +
-          "• **Tiến độ chung:** Đã hoàn thành 65% mục tiêu tuần này.\n\n" +
-          "💡 *Lời khuyên:* Hãy tập trung xử lý task ưu tiên cao trước khi bắt đầu các cuộc thảo luận!";
-      } else if (query.toLowerCase().includes("ưu tiên") || query === "priority") {
-        reply = "⚡ **Các công việc cần ưu tiên hàng đầu:**\n\n" +
-          "1. 🔴 **[Ưu tiên cao] Xác thực API & Bảo mật** — Hạn chót: Hôm nay\n" +
-          "2. 🟡 **[Trung bình] Cập nhật giao diện Dashboard** — Hạn chót: Ngày mai\n" +
-          "3. 🔵 **[Thấp] Viết tài liệu hướng dẫn nhóm** — Hạn chót: Cuối tuần";
-      } else if (query.toLowerCase().includes("kế hoạch") || query.toLowerCase().includes("lịch trình") || query === "plan") {
-        reply = "📅 **Đề xuất lịch trình làm việc tập trung hôm nay:**\n\n" +
-          "• **09:00 - 11:30 (Khung giờ tập trung cao độ):** Lập trình các module API & xử lý lỗi tồn đọng.\n" +
-          "• **13:30 - 15:00:** Đánh giá mã nguồn (Review PRs) và cập nhật tiến độ trên Bảng công việc.\n" +
-          "• **15:30 - 17:00:** Kiểm thử và hoàn tất tài liệu báo cáo.";
-      } else {
-        reply = `Mình đã ghi nhận yêu cầu: "${query}". Hệ thống sẽ phân tích dữ liệu dự án và gợi ý giải pháp năng suất tối ưu nhất cho bạn!`;
-      }
+    const reply = await callApi(query);
 
-      setMessages([...newMsgs, { role: "assistant", content: reply }]);
-      setLoading(false);
-    }, 600);
+    setMessages([...newMsgs, { role: "assistant", content: reply }]);
+    setLoading(false);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
