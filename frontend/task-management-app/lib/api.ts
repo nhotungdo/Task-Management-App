@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://localhost:7070/api', // The .NET Core API backend
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7070/api',
 });
 
 // Add a request interceptor to attach the JWT token
