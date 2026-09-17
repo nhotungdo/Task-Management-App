@@ -36,4 +36,5 @@ public partial class User
     public virtual ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
     public virtual ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
     public virtual ICollection<TaskAttachment> TaskAttachments { get; set; } = new List<TaskAttachment>();
+    public virtual ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
 }

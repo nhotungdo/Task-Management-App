@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagementApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TaskManagementApp.Infrastructure.Data;
 namespace TaskManagementApp.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskManagementAppContext))]
-    partial class TaskManagementAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260917160604_Phase2_AddTags_Subtasks_CustomFields_Templates_Webhooks")]
+    partial class Phase2_AddTags_Subtasks_CustomFields_Templates_Webhooks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -279,55 +282,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("TaskManagementApp.Domain.Entities.SlackInstallation", b =>
-                {
-                    b.Property<Guid>("SlackInstallationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("(newid())");
-
-                    b.Property<string>("AccessToken")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Scope")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("SlackUserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SlackWorkspaceId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SlackWorkspaceName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<Guid?>("WorkspaceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("SlackInstallationId");
-
-                    b.HasIndex("WorkspaceId");
-
-                    b.ToTable("SlackInstallations");
-                });
-
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.Subtask", b =>
                 {
                     b.Property<Guid>("SubtaskId")
@@ -436,9 +390,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<DateTime?>("LastReminderSent")
-                        .HasColumnType("datetime");
-
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -465,16 +416,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.Property<string>("RecurrencePattern")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("ReminderEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("ReminderSent")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime");
@@ -1067,16 +1008,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasConstraintName("FK_RefreshTokens_Users");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TaskManagementApp.Domain.Entities.SlackInstallation", b =>
-                {
-                    b.HasOne("TaskManagementApp.Domain.Entities.Workspace", "Workspace")
-                        .WithMany()
-                        .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.Subtask", b =>

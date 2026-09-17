@@ -4,9 +4,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { isBefore, isToday, isTomorrow, isAfter, addDays, startOfDay, format } from "date-fns";
-import { CheckCircle2, Clock, AlertCircle, CalendarClock, FolderOpen, ChevronDown, ChevronRight, Sparkles, Target, Plus } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarClock, FolderOpen, ChevronDown, ChevronRight, Sparkles, Target, Plus, Tag } from "lucide-react";
 import api from "@/lib/api";
 import CreateTaskModal from "@/components/CreateTaskModal";
+
+interface Tag {
+  tagId: string;
+  name: string;
+  color: string;
+}
 
 interface Task {
   taskId: string;
@@ -18,6 +24,7 @@ interface Task {
   progress: number;
   workspaceId?: string;
   workspaceName?: string;
+  tags?: Tag[];
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -117,6 +124,11 @@ function TaskCard({ task, workspaceNames, cardIdx }: { task: Task; workspaceName
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[task.status] ?? ""}`}>
               {STATUS_LABELS[task.status] || task.status}
             </span>
+            {(task.tags ?? []).slice(0, 1).map(tag => (
+              <span key={tag.tagId} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: (tag.color || "#6B7280") + "15", color: tag.color }}>
+                {tag.name}
+              </span>
+            ))}
           </div>
           {task.dueDate && safeDate(task.dueDate) && (
             <span className={`text-xs font-bold flex items-center gap-1 ${

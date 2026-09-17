@@ -37,7 +37,11 @@ public class TasksController : ControllerBase
         Guid WorkspaceId,
         int Progress = 0,
         decimal? EstimatedHours = null,
-        bool IsMilestone = false
+        bool IsMilestone = false,
+        string? RecurrencePattern = null,
+        DateTime? RecurrenceEndDate = null,
+        int RecurrenceInterval = 1,
+        List<Guid>? TagIds = null
     );
 
     public record TaskUpdateDto(
@@ -50,7 +54,11 @@ public class TasksController : ControllerBase
         int? Progress,
         decimal? EstimatedHours,
         decimal? ActualHours,
-        bool? IsMilestone
+        bool? IsMilestone,
+        string? RecurrencePattern = null,
+        DateTime? RecurrenceEndDate = null,
+        int? RecurrenceInterval = null,
+        List<Guid>? TagIds = null
     );
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -89,10 +97,14 @@ public class TasksController : ControllerBase
                 t.EstimatedHours,
                 t.ActualHours,
                 t.IsMilestone,
+                t.RecurrencePattern,
+                t.RecurrenceEndDate,
+                t.RecurrenceInterval,
                 t.OwnerId,
                 t.WorkspaceId,
                 t.CreatedAt,
-                t.UpdatedAt
+                t.UpdatedAt,
+                Tags = t.Tags.Select(tag => new { tag.TagId, tag.Name, tag.Color })
             })
             .ToListAsync();
         return Ok(new { total, page, pageSize, items });
@@ -110,6 +122,8 @@ public class TasksController : ControllerBase
             .Include(t => t.TimeLogs).ThenInclude(tl => tl.User)
             .Include(t => t.Attachments)
             .Include(t => t.TaskAssignments).ThenInclude(a => a.User)
+            .Include(t => t.Tags)
+            .Include(t => t.Subtasks)
             .FirstOrDefaultAsync(t => t.TaskId == id);
         if (task == null) return NotFound();
         var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId)
@@ -129,6 +143,9 @@ public class TasksController : ControllerBase
             task.EstimatedHours,
             task.ActualHours,
             task.IsMilestone,
+            task.RecurrencePattern,
+            task.RecurrenceEndDate,
+            task.RecurrenceInterval,
             task.OwnerId,
             task.WorkspaceId,
             task.CreatedAt,
@@ -165,13 +182,26 @@ public class TasksController : ControllerBase
                 a.FileSizeBytes,
                 a.UploadedAt
             }),
-            Assignees = (task.TaskAssignments ?? Enumerable.Empty<TaskAssignment>()).Select(a => new {
-                a.TaskAssignmentId,
-                a.UserId,
-                UserName = a.User != null ? (a.User.FullName ?? a.User.Email) : "Thành viên",
-                UserEmail = a.User != null ? a.User.Email : ""
-            })
-        });
+             Assignees = (task.TaskAssignments ?? Enumerable.Empty<TaskAssignment>()).Select(a => new {
+                 a.TaskAssignmentId,
+                 a.UserId,
+                 UserName = a.User != null ? (a.User.FullName ?? a.User.Email) : "Thành viên",
+                 UserEmail = a.User != null ? a.User.Email : ""
+             }),
+             Tags = (task.Tags ?? Enumerable.Empty<Tag>()).Select(t => new {
+                 t.TagId,
+                 t.Name,
+                 t.Color
+             }),
+             Subtasks = (task.Subtasks ?? Enumerable.Empty<Subtask>()).OrderBy(s => s.SortOrder).Select(s => new {
+                 s.SubtaskId,
+                 s.Title,
+                 s.IsCompleted,
+                 s.AssignedToUserId,
+                 s.DueDate,
+                 s.SortOrder
+             })
+         });
     }
 
     [HttpPost]
@@ -194,12 +224,32 @@ public class TasksController : ControllerBase
             Progress = dto.Progress,
             EstimatedHours = dto.EstimatedHours,
             IsMilestone = dto.IsMilestone,
+            RecurrencePattern = dto.RecurrencePattern,
+            RecurrenceEndDate = dto.RecurrenceEndDate,
+            RecurrenceInterval = dto.RecurrenceInterval,
             OwnerId = userId,
             WorkspaceId = dto.WorkspaceId,
             CreatedAt = DateTime.UtcNow
         };
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
+
+        if (dto.TagIds?.Any() == true)
+        {
+            await _db.Entry(task).Collection(t => t.Tags).LoadAsync();
+            var validTags = await _db.Tags
+                .Where(t => t.WorkspaceId == dto.WorkspaceId && dto.TagIds.Contains(t.TagId))
+                .ToListAsync();
+            foreach (var tag in validTags)
+            {
+                if (!task.Tags.Any(t => t.TagId == tag.TagId))
+                {
+                    task.Tags.Add(tag);
+                }
+            }
+            await _db.SaveChangesAsync();
+        }
+
         await _taskHub.Clients.Group($"workspace:{dto.WorkspaceId}").SendAsync("TaskCreated", task);
         return CreatedAtAction(nameof(GetById), new { id = task.TaskId }, task);
     }
@@ -224,8 +274,39 @@ public class TasksController : ControllerBase
         if (dto.EstimatedHours.HasValue) task.EstimatedHours = dto.EstimatedHours.Value;
         if (dto.ActualHours.HasValue) task.ActualHours = dto.ActualHours.Value;
         if (dto.IsMilestone.HasValue) task.IsMilestone = dto.IsMilestone.Value;
+        if (dto.RecurrencePattern != null) task.RecurrencePattern = dto.RecurrencePattern;
+        if (dto.RecurrenceEndDate.HasValue) task.RecurrenceEndDate = dto.RecurrenceEndDate.Value;
+        if (dto.RecurrenceInterval.HasValue) task.RecurrenceInterval = dto.RecurrenceInterval.Value;
         task.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+
+        if (dto.TagIds != null)
+        {
+            await _db.Entry(task).Collection(t => t.Tags).LoadAsync();
+            var currentTagIds = task.Tags.Select(t => t.TagId).ToList();
+
+            var tagsToAdd = dto.TagIds.Except(currentTagIds).ToList();
+            var tagsToRemove = currentTagIds.Except(dto.TagIds).ToList();
+
+            if (tagsToAdd.Any() || tagsToRemove.Any())
+            {
+                var tagsToAddEntities = await _db.Tags.Where(t => tagsToAdd.Contains(t.TagId) && t.WorkspaceId == task.WorkspaceId).ToListAsync();
+                foreach (var tagEntity in tagsToAddEntities)
+                {
+                    if (!task.Tags.Any(t => t.TagId == tagEntity.TagId))
+                    {
+                        task.Tags.Add(tagEntity);
+                    }
+                }
+                var tagsToRemoveEntities = task.Tags.Where(t => tagsToRemove.Contains(t.TagId)).ToList();
+                foreach (var tagEntity in tagsToRemoveEntities)
+                {
+                    task.Tags.Remove(tagEntity);
+                }
+                await _db.SaveChangesAsync();
+            }
+        }
+
         await _taskHub.Clients.Group($"workspace:{task.WorkspaceId}").SendAsync("TaskUpdated", task);
         return Ok(task);
     }

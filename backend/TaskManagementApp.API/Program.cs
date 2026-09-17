@@ -8,6 +8,7 @@ using TaskManagementApp.Infrastructure.Data;
 using TaskManagementApp.Infrastructure.Services;
 using Serilog;
 using TaskManagementApp.Controllers;
+using TaskManagementApp.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -107,6 +108,15 @@ builder.Services.AddScoped<ITokenService>(sp =>
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
+// Background services
+builder.Services.AddHostedService<EmailRemindersService>();
+
+// HTTP client for Slack/webhook dispatch
+builder.Services.AddHttpClient();
+
+// File storage for uploads
+builder.Services.AddDirectoryBrowser();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -117,6 +127,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors();
 
 app.UseAuthentication();

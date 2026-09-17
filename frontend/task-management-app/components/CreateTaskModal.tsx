@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Plus, Calendar, Clock, Flag, FolderKanban, Sparkles, Target, AlertCircle, CheckCircle2 } from "lucide-react";
+import { X, Plus, Calendar, Clock, Flag, FolderKanban, Sparkles, Target, AlertCircle, CheckCircle2, Tag, Repeat, Bell } from "lucide-react";
 import api from "@/lib/api";
 
 export interface CreateTaskModalProps {
@@ -20,6 +20,12 @@ export interface CreateTaskModalProps {
 interface WorkspaceOption {
   workspaceId: string;
   name: string;
+}
+
+interface TagOption {
+  tagId: string;
+  name: string;
+  color: string;
 }
 
 export default function CreateTaskModal({
@@ -43,10 +49,15 @@ export default function CreateTaskModal({
   const [dueDate, setDueDate] = useState(defaultDueDate);
   const [estimatedHours, setEstimatedHours] = useState<string>("");
   const [isMilestone, setIsMilestone] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [recurrencePattern, setRecurrencePattern] = useState<string>("");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<string>("");
+  const [availableTags, setAvailableTags] = useState<TagOption[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Load workspaces if not locked or if workspaceId not set
+   // Load workspaces if not locked or if workspaceId not set
   useEffect(() => {
     if (!isOpen) return;
     api.get("/Workspaces")
@@ -61,6 +72,19 @@ export default function CreateTaskModal({
         console.error("Failed to load workspaces for task modal:", err);
       });
   }, [isOpen, defaultWorkspaceId, workspaceId]);
+
+  // Load tags for the selected workspace
+  useEffect(() => {
+    if (!workspaceId) { setAvailableTags([]); return; }
+    api.get(`/workspaces/${workspaceId}/tags`)
+      .then(res => setAvailableTags(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setAvailableTags([]));
+  }, [workspaceId]);
+
+  // Reset selected tags when workspace changes
+  useEffect(() => {
+    setSelectedTagIds(new Set());
+  }, [workspaceId]);
 
   // Sync defaults when modal opens or defaults change
   useEffect(() => {
@@ -92,7 +116,7 @@ export default function CreateTaskModal({
     setErrorMessage("");
 
     try {
-      const payload: any = {
+       const payload: any = {
         title: title.trim(),
         description: description.trim() || null,
         workspaceId: targetWs,
@@ -100,6 +124,11 @@ export default function CreateTaskModal({
         priority,
         progress: status === "Done" ? 100 : 0,
         isMilestone,
+        reminderEnabled,
+        recurrencePattern: recurrencePattern || null,
+        recurrenceEndDate: recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null,
+        recurrenceInterval: 1,
+        tagIds: Array.from(selectedTagIds),
         startDate: startDate ? new Date(startDate).toISOString() : null,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         estimatedHours: estimatedHours && parseFloat(estimatedHours) > 0 ? parseFloat(estimatedHours) : null,
@@ -116,6 +145,10 @@ export default function CreateTaskModal({
       setDueDate("");
       setEstimatedHours("");
       setIsMilestone(false);
+      setReminderEnabled(true);
+      setRecurrencePattern("");
+      setRecurrenceEndDate("");
+      setSelectedTagIds(new Set());
 
       onTaskCreated?.(res.data);
       onClose();
@@ -325,6 +358,76 @@ export default function CreateTaskModal({
                   Cột mốc (Milestone)
                 </span>
               </label>
+            </div>
+          </div>
+
+          {/* Tags & Recurrence */}
+          <div className="space-y-4 pt-1">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Tag size={13} className="text-pink-500" />
+                Nhãn (Tags)
+              </label>
+              {availableTags.length === 0 ? (
+                <p className="text-xs text-slate-400">Chưa có nhãn nào trong dự án này.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map(tag => {
+                    const isSelected = selectedTagIds.has(tag.tagId);
+                    return (
+                      <button
+                        key={tag.tagId}
+                        type="button"
+                        onClick={() => {
+                          const newSet = new Set(selectedTagIds);
+                          if (isSelected) newSet.delete(tag.tagId);
+                          else newSet.add(tag.tagId);
+                          setSelectedTagIds(newSet);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          isSelected ? "ring-2 ring-offset-1 ring-indigo-500" : "hover:bg-slate-100"
+                        }`}
+                        style={{ backgroundColor: isSelected ? tag.color + "20" : tag.color + "10", color: tag.color }}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                        {tag.name}
+                        {isSelected && <span className="ml-1">×</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Repeat size={13} className="text-indigo-500" />
+                Lặp lại (Recurrence)
+              </label>
+              <select
+                value={recurrencePattern}
+                onChange={e => setRecurrencePattern(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all"
+              >
+                <option value="">Không lặp lại</option>
+                <option value="Daily">Hằng ngày</option>
+                <option value="Weekly">Hằng tuần</option>
+                <option value="Monthly">Hàng tháng</option>
+                <option value="Yearly">Hàng năm</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2.5 cursor-pointer select-none bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 transition-colors">
+              <input
+                type="checkbox"
+                checked={reminderEnabled}
+                onChange={e => setReminderEnabled(e.target.checked)}
+                className="w-4 h-4 accent-indigo-600 rounded"
+              />
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <Bell size={13} className="text-indigo-600" />
+                Bật nhắc nhở qua email
+              </span>
             </div>
           </div>
 

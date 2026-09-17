@@ -4,13 +4,16 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
   BarChart3, LayoutGrid, Calendar as CalendarIcon, 
-  List, GitCommit, MoreVertical, Plus,
-  X, Users, AlertTriangle, ShieldAlert, Loader2, ChevronLeft, ChevronRight,
-  Clock, MessageSquare, Link2, Check,
-  Trash2, Edit3, Send, Target
+   List, GitCommit, MoreVertical, Plus,
+   X, Users, AlertTriangle, ShieldAlert, Loader2, ChevronLeft, ChevronRight,
+   Clock, MessageSquare, Link2, Check,
+   Trash2, Edit3, Send, Target, Tag, Repeat, CheckCircle, FileText, Upload, Download
 } from "lucide-react";
 import api from "@/lib/api";
 import CreateTaskModal from "@/components/CreateTaskModal";
+import SubtasksManager from "@/components/SubtasksManager";
+import AttachmentsManager from "@/components/AttachmentsManager";
+import TagsManager from "@/components/TagsManager";
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval,
@@ -30,9 +33,31 @@ interface Task {
   estimatedHours?: number;
   actualHours?: number;
   isMilestone: boolean;
+  recurrencePattern?: string;
+  recurrenceEndDate?: string;
+  recurrenceInterval: number;
   createdAt: string;
   ownerId?: string;
+  workspaceId?: string;
   description?: string;
+  tags?: Tag[];
+}
+
+interface TaskTag {
+  tagId: string;
+  name: string;
+  color: string;
+}
+
+interface Subtask {
+  subtaskId: string;
+  taskId: string;
+  title: string;
+  isCompleted: boolean;
+  assignedToUserId?: string;
+  dueDate?: string;
+  sortOrder: number;
+  createdAt: string;
 }
 
 interface TaskDetail extends Task {
@@ -41,6 +66,7 @@ interface TaskDetail extends Task {
   timeLogs: { timeLogId: string; hours: number; logDate: string; comment?: string; userId: string; userName: string }[];
   attachments: { taskAttachmentId: string; fileName: string; fileUrl: string; contentType?: string; fileSizeBytes: number; uploadedAt: string }[];
   assignees: { taskAssignmentId: string; userId: string; userName: string; userEmail: string }[];
+  subtasks: Subtask[];
 }
 
 interface Workspace {
@@ -152,6 +178,8 @@ function TaskDetailDrawer({
         timeLogs: Array.isArray(data.timeLogs) ? data.timeLogs : [],
         attachments: Array.isArray(data.attachments) ? data.attachments : [],
         assignees: Array.isArray(data.assignees) ? data.assignees : [],
+        subtasks: Array.isArray(data.subtasks) ? data.subtasks : [],
+        tags: Array.isArray(data.tags) ? data.tags : [],
       };
       setDetail(normalizedDetail);
       setEditedTask({
@@ -276,6 +304,11 @@ function TaskDetailDrawer({
                       <Target size={10} /> Milestone
                     </span>
                   )}
+                  {(detail.tags ?? []).map(tag => (
+                    <span key={tag.tagId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: (tag.color || "#6B7280") + "15", color: tag.color }}>
+                      <Tag size={10} /> {tag.name}
+                    </span>
+                  ))}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -457,16 +490,35 @@ function TaskDetailDrawer({
                     </div>
                   )}
 
-                  {/* Milestone toggle */}
-                  {isEditing && (
-                    <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
-                      <input type="checkbox" id="milestone-toggle" checked={editedTask.isMilestone ?? false}
-                        onChange={e => setEditedTask(p => ({ ...p, isMilestone: e.target.checked }))}
-                        className="w-4 h-4 accent-purple-600" />
-                      <label htmlFor="milestone-toggle" className="text-sm font-bold text-purple-700 cursor-pointer">Đánh dấu là Milestone ◆</label>
-                    </div>
-                  )}
-                </div>
+                   {/* Milestone toggle */}
+                   {isEditing && (
+                     <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                       <input type="checkbox" id="milestone-toggle" checked={editedTask.isMilestone ?? false}
+                         onChange={e => setEditedTask(p => ({ ...p, isMilestone: e.target.checked }))}
+                         className="w-4 h-4 accent-purple-600" />
+                       <label htmlFor="milestone-toggle" className="text-sm font-bold text-purple-700 cursor-pointer">Đánh dấu là Milestone ◆</label>
+                     </div>
+                   )}
+
+                   {/* Recurrence */}
+                   {detail.recurrencePattern && (
+                     <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                       <Repeat size={14} className="text-indigo-600" />
+                       <span className="text-sm font-bold text-indigo-700">
+                         Lặp lại: {detail.recurrencePattern === "Daily" ? "Hàng ngày" : detail.recurrencePattern === "Weekly" ? "Hàng tuần" : detail.recurrencePattern === "Monthly" ? "Hàng tháng" : detail.recurrencePattern === "Yearly" ? "Hàng năm" : detail.recurrencePattern}
+                       </span>
+                       {detail.recurrenceEndDate && (
+                         <span className="text-xs text-slate-500">· đến {safeFormatDate(detail.recurrenceEndDate, "dd/MM/yyyy")}</span>
+                       )}
+                     </div>
+                   )}
+
+                    {/* Subtasks */}
+                    <SubtasksManager taskId={taskId} subtasks={(detail.subtasks ?? [])} onUpdate={loadDetail} workspaceId={detail.workspaceId} />
+
+                    {/* Attachments */}
+                    <AttachmentsManager taskId={taskId} attachments={(detail.attachments ?? [])} onUpdate={loadDetail} />
+                  </div>
               )}
 
               {/* ── COMMENTS TAB ── */}
@@ -782,8 +834,9 @@ export default function WorkspaceDetail() {
     { id: "gantt", label: "Biểu đồ tiến độ", icon: GitCommit },
     { id: "list", label: "Danh sách", icon: List },
     { id: "calendar", label: "Lịch", icon: CalendarIcon },
-    { id: "workload", label: "Khối lượng công việc", icon: Users },
-  ];
+     { id: "workload", label: "Khối lượng công việc", icon: Users },
+     { id: "tags", label: "Nhãn & Tags", icon: Tag },
+   ];
 
   // ── Completion stats for dashboard ──
   const totalTasks = tasks.length;
@@ -1353,7 +1406,14 @@ export default function WorkspaceDetail() {
           </div>
         )}
 
-        {/* ── BOARD ── */}
+        {/* ── TAGS ── */}
+        {activeTab === "tags" && (
+          <div className="h-full overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+            <TagsManager workspaceId={workspaceId} />
+          </div>
+        )}
+
+        {/* ── BOARD ── */}}
         {activeTab === "board" && (
           <div className="h-full flex flex-col">
             <div className="flex gap-6 overflow-x-auto pb-4 items-start h-full" style={{ scrollbarWidth: "thin" }}>
@@ -1394,16 +1454,24 @@ export default function WorkspaceDetail() {
                             <MoreVertical size={14} className="text-slate-300 shrink-0 group-hover:text-slate-500" />
                           </div>
                           
-                          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority] ?? ""}`}>
-                              {PRIORITY_ICONS[task.priority]} {PRIORITY_LABELS[task.priority] || task.priority}
-                            </span>
-                            {task.isMilestone && (
-                              <span className="text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
-                                ◆ Cột mốc
-                              </span>
-                            )}
-                          </div>
+                            <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority] ?? ""}`}>
+                               {PRIORITY_ICONS[task.priority]} {PRIORITY_LABELS[task.priority] || task.priority}
+                             </span>
+                             {task.isMilestone && (
+                               <span className="text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+                                 ◆ Cột mốc
+                               </span>
+                             )}
+                             {(task.tags ?? []).slice(0, 3).map(tag => (
+                               <span key={tag.tagId} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: (tag.color || "#6B7280") + "15", color: tag.color }}>
+                                 {tag.name}
+                               </span>
+                             ))}
+                             {task.tags && task.tags.length > 3 && (
+                               <span className="text-[10px] font-bold text-slate-500">+{task.tags.length - 3} thêm</span>
+                             )}
+                           </div>
 
                           {task.progress > 0 && (
                             <div className="mb-3">

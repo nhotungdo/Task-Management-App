@@ -30,6 +30,19 @@ public partial class TaskManagementAppContext : DbContext
     public virtual DbSet<TaskComment> TaskComments { get; set; }
     public virtual DbSet<TaskAttachment> TaskAttachments { get; set; }
 
+    // Phase 2 — Enhanced Entities
+    public virtual DbSet<Subtask> Subtasks { get; set; }
+    public virtual DbSet<Tag> Tags { get; set; }
+    public virtual DbSet<CustomField> CustomFields { get; set; }
+    public virtual DbSet<TaskCustomFieldValue> TaskCustomFieldValues { get; set; }
+    public virtual DbSet<ProjectTemplate> ProjectTemplates { get; set; }
+    public virtual DbSet<TemplateTask> TemplateTasks { get; set; }
+    public virtual DbSet<WebhookEndpoint> WebhookEndpoints { get; set; }
+    public virtual DbSet<WebhookEvent> WebhookEvents { get; set; }
+
+    // Integrations
+    public virtual DbSet<SlackInstallation> SlackInstallations { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
          => optionsBuilder.UseSqlServer("Data Source=NHOTUNG\\SQLEXPRESS;Database=TaskManagementApp;User Id=sa;Password=123;TrustServerCertificate=true;Trusted_Connection=SSPI;Encrypt=false;"); 
@@ -76,10 +89,17 @@ public partial class TaskManagementAppContext : DbContext
             entity.Property(e => e.EstimatedHours).HasColumnType("decimal(8,2)");
             entity.Property(e => e.ActualHours).HasColumnType("decimal(8,2)");
             entity.Property(e => e.IsMilestone).HasDefaultValue(false);
+            entity.Property(e => e.RecurrencePattern).HasMaxLength(50);
+            entity.Property(e => e.RecurrenceEndDate).HasColumnType("datetime");
+            entity.Property(e => e.RecurrenceInterval).HasDefaultValue(1);
+            entity.Property(e => e.ReminderEnabled).HasDefaultValue(true);
+            entity.Property(e => e.LastReminderSent).HasColumnType("datetime");
+            entity.Property(e => e.ReminderSent).HasDefaultValue(false);
             entity.HasOne(d => d.Owner).WithMany(p => p.Tasks).HasForeignKey(d => d.OwnerId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Tasks_Users"); 
             entity.HasOne(d => d.Workspace).WithMany(p => p.Tasks).HasForeignKey(d => d.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
-        }); 
-        
+            entity.HasMany(t => t.Tags).WithMany(t => t.Tasks).UsingEntity(j => j.ToTable("TaskTags"));
+        });
+
         modelBuilder.Entity<TaskAssignment>(entity => { 
             entity.HasKey(e => e.TaskAssignmentId).HasName("PK__TaskAssi__75E8D23F4E3E24D2"); 
             entity.Property(e => e.TaskAssignmentId).HasDefaultValueSql("(newid())"); 
@@ -220,7 +240,164 @@ public partial class TaskManagementAppContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        OnModelCreatingPartial(modelBuilder); 
+        modelBuilder.Entity<Subtask>(entity =>
+        {
+            entity.HasKey(e => e.SubtaskId);
+            entity.Property(e => e.SubtaskId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Title).HasMaxLength(255);
+            entity.Property(e => e.IsCompleted).HasDefaultValue(false);
+            entity.Property(e => e.DueDate).HasColumnType("datetime");
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany(t => t.Subtasks)
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.AssignedToUser)
+                .WithMany(u => u.Subtasks)
+                .HasForeignKey(d => d.AssignedToUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.TagId);
+            entity.Property(e => e.TagId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Color).HasMaxLength(7).HasDefaultValue("#6B7280");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CustomField>(entity =>
+        {
+            entity.HasKey(e => e.CustomFieldId);
+            entity.Property(e => e.CustomFieldId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.FieldType).HasMaxLength(50).HasDefaultValue("Text");
+            entity.Property(e => e.OptionsJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.IsRequired).HasDefaultValue(false);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskCustomFieldValue>(entity =>
+        {
+            entity.HasKey(e => e.TaskCustomFieldValueId);
+            entity.Property(e => e.TaskCustomFieldValueId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.ValueText).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany()
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.CustomField)
+                .WithMany(cf => cf.Values)
+                .HasForeignKey(d => d.CustomFieldId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProjectTemplate>(entity =>
+        {
+            entity.HasKey(e => e.ProjectTemplateId);
+            entity.Property(e => e.ProjectTemplateId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Description).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateTask>(entity =>
+        {
+            entity.HasKey(e => e.TemplateTaskId);
+            entity.Property(e => e.TemplateTaskId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Title).HasMaxLength(255);
+            entity.Property(e => e.Description).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Priority).HasMaxLength(50).HasDefaultValue("Normal");
+            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("To Do");
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+
+            entity.HasOne(d => d.ProjectTemplate)
+                .WithMany(pt => pt.TemplateTasks)
+                .HasForeignKey(d => d.ProjectTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WebhookEndpoint>(entity =>
+        {
+            entity.HasKey(e => e.WebhookEndpointId);
+            entity.Property(e => e.WebhookEndpointId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Url).HasMaxLength(2000);
+            entity.Property(e => e.Secret).HasMaxLength(500);
+            entity.Property(e => e.Events).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WebhookEvent>(entity =>
+        {
+            entity.HasKey(e => e.WebhookEventId);
+            entity.Property(e => e.WebhookEventId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.EventType).HasMaxLength(100);
+            entity.Property(e => e.Payload).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.DeliveryAttempts).HasDefaultValue(0);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.DeliveredAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.WebhookEndpoint)
+                .WithMany(we => we.WebhookEvents)
+                .HasForeignKey(d => d.WebhookEndpointId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WebhookEvent>().HasIndex(e => new { e.WebhookEndpointId, e.Delivered, e.CreatedAt });
+
+        modelBuilder.Entity<SlackInstallation>(entity =>
+        {
+            entity.HasKey(e => e.SlackInstallationId);
+            entity.Property(e => e.SlackInstallationId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.SlackWorkspaceId).HasMaxLength(100);
+            entity.Property(e => e.SlackWorkspaceName).HasMaxLength(255);
+            entity.Property(e => e.SlackUserId).HasMaxLength(100);
+            entity.Property(e => e.AccessToken).HasMaxLength(500);
+            entity.Property(e => e.Scope).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.RevokedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

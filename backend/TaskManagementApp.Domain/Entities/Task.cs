@@ -28,6 +28,18 @@ public partial class Task
 
     public bool IsMilestone { get; set; } = false;
 
+    public string? RecurrencePattern { get; set; }
+
+    public DateTime? RecurrenceEndDate { get; set; }
+
+    public int RecurrenceInterval { get; set; } = 1;
+
+    public bool ReminderEnabled { get; set; } = true;
+
+    public DateTime? LastReminderSent { get; set; }
+
+    public bool ReminderSent { get; set; } = false;
+
     public Guid OwnerId { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -51,4 +63,8 @@ public partial class Task
     public virtual ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
 
     public virtual ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
+
+    public virtual ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
+
+    public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
