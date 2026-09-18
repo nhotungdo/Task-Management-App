@@ -1,4 +1,4 @@
-﻿/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -338,7 +338,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">AD</div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-700 leading-snug">
-                          <strong>Quản trị viên</strong> đã giao cho bạn công việc <span className="font-semibold text-slate-900">"Thiết kế giao diện SaaS"</span>
+                          <strong>Quản trị viên</strong> đã giao cho bạn công việc <span className="font-semibold text-slate-900">&quot;Thiết kế giao diện SaaS&quot;</span>
                         </p>
                         <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> 10 phút trước</p>
                       </div>
@@ -360,7 +360,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-700 leading-snug">
-                          Hải Quân đã hoàn thành công việc <span className="font-semibold text-slate-900">"API Unit Tests"</span>
+                          Hải Quân đã hoàn thành công việc <span className="font-semibold text-slate-900">&quot;API Unit Tests&quot;</span>
                         </p>
                         <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> Hôm qua</p>
                       </div>

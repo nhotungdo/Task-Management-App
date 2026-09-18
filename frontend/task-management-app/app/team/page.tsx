@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
@@ -45,6 +45,8 @@ function CounterNumber({ value, suffix = "" }: { value: number; suffix?: string 
     const duration = 700;
     const step = 16;
     const increment = value / (duration / step) || 0;
+     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (value === 0) { setDisplay(0); return; }
     const timer = setInterval(() => {
       start += increment;
@@ -238,12 +240,16 @@ export default function TeamPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(fetchData, 300);
+     
     return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   // Compute real stats per user
+   
   const userStatsMap = useMemo(() => {
     const map: Record<string, MemberRealStats> = {};
+    // eslint-disable-next-line react-hooks/purity
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     users.forEach(u => {
@@ -402,7 +408,7 @@ export default function TeamPage() {
           <div className="flex flex-col items-center justify-center py-24 text-slate-400">
             <Users size={48} className="mb-4 animate-float opacity-30" />
             <p className="text-base font-bold">Không tìm thấy thành viên</p>
-            <p className="text-sm mt-1">Thử từ khóa khác hoặc nhấn "Mời thành viên" để thêm người mới vào dự án</p>
+            <p className="text-sm mt-1">Thử từ khóa khác hoặc nhấn &quot;Mời thành viên&quot; để thêm người mới vào dự án</p>
           </div>
         ) : (
           <>

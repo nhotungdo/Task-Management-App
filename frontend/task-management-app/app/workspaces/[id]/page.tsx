@@ -7,7 +7,7 @@ import {
    List, GitCommit, MoreVertical, Plus,
    X, Users, AlertTriangle, ShieldAlert, Loader2, ChevronLeft, ChevronRight,
    Clock, MessageSquare, Link2, Check,
-   Trash2, Edit3, Send, Target, Tag, Repeat, CheckCircle, FileText, Upload, Download
+   Trash2, Edit3, Send, Target, Tag, Repeat
 } from "lucide-react";
 import api from "@/lib/api";
 import CreateTaskModal from "@/components/CreateTaskModal";
@@ -21,6 +21,12 @@ import {
 } from "date-fns";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface TaskTag {
+  tagId: string;
+  name: string;
+  color: string;
+}
 
 interface Task {
   taskId: string;
@@ -40,14 +46,10 @@ interface Task {
   ownerId?: string;
   workspaceId?: string;
   description?: string;
-  tags?: Tag[];
+  tags?: TaskTag[];
 }
 
-interface TaskTag {
-  tagId: string;
-  name: string;
-  color: string;
-}
+
 
 interface Subtask {
   subtaskId: string;
@@ -750,27 +752,6 @@ export default function WorkspaceDetail() {
     catch { loadData(); }
   };
 
-  // ── Task Creation ──
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTask.title.trim()) return;
-    try {
-      await api.post("/Tasks", {
-        title: newTask.title,
-        description: newTask.description || null,
-        workspaceId,
-        status: newTask.status,
-        priority: newTask.priority,
-        startDate: newTask.startDate ? new Date(newTask.startDate).toISOString() : null,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : null,
-        estimatedHours: newTask.estimatedHours ? parseFloat(newTask.estimatedHours) : null,
-        progress: 0,
-      });
-      setIsModalOpen(false);
-      setNewTask({ title: "", description: "", status: "To Do", priority: "Medium", startDate: "", dueDate: "", estimatedHours: "" });
-      loadData();
-    } catch { console.error("Failed to create task"); }
-  };
 
   const handleAiAnalyze = () => {
     setIsAiRiskModalOpen(true);
@@ -1413,7 +1394,7 @@ export default function WorkspaceDetail() {
           </div>
         )}
 
-        {/* ── BOARD ── */}}
+        {/* ── BOARD ── */}
         {activeTab === "board" && (
           <div className="h-full flex flex-col">
             <div className="flex gap-6 overflow-x-auto pb-4 items-start h-full" style={{ scrollbarWidth: "thin" }}>

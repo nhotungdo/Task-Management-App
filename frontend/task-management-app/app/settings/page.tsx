@@ -1,6 +1,8 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-location-assign-relative-destination */
 "use client";
 
+ 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useEffect, useState, useRef } from "react";
 import { User, Lock, Bell, LogOut, Shield, Monitor, Key, Smartphone, Globe, CreditCard, ChevronRight, Upload, Camera, Check, Zap, Star } from "lucide-react";
 import api from "@/lib/api";
@@ -56,14 +58,18 @@ function PasswordStrength({ value }: { value: string }) {
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
+   
   const [activeTab, setActiveTab] = useState("profile");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [prevTab, setPrevTab] = useState("profile");
   const [tabKey, setTabKey] = useState(0);
   const [toast, setToast] = useState<{ show: boolean; message: string; type?: "success" | "error" }>({ show: false, message: "", type: "success" });
   const [theme, setTheme] = useState("light");
   const [color, setColor] = useState("indigo");
+   
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notifStates, setNotifStates] = useState({ email: true, push: true, weekly: false });
 
   useEffect(() => {

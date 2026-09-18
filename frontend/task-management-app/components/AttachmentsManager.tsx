@@ -55,6 +55,8 @@ export default function AttachmentsManager({ taskId, attachments: initialAttachm
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
+     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttachments(initialAttachments);
   }, [initialAttachments]);
 

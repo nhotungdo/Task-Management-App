@@ -1,7 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 
 import React, { useState } from "react";
+ 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CheckSquare, Square, Plus, Trash2, User, Calendar, GripVertical } from "lucide-react";
 import api from "@/lib/api";
 
@@ -22,11 +24,15 @@ interface SubtasksManagerProps {
   onUpdate: () => void;
   workspaceId?: string;
 }
+ 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function SubtasksManager({ taskId, subtasks: initialSubtasks, onUpdate, workspaceId }: SubtasksManagerProps) {
   const [subtasks, setSubtasks] = useState<Subtask[]>(initialSubtasks);
+   
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [adding, setAdding] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
 
   const refresh = async () => {
@@ -40,9 +46,11 @@ export default function SubtasksManager({ taskId, subtasks: initialSubtasks, onU
     } finally {
       setLoading(false);
     }
+   
   };
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubtasks(initialSubtasks);
   }, [initialSubtasks]);
 

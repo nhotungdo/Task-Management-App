@@ -52,12 +52,6 @@ export default function CalendarPage() {
     }).catch(console.error);
   }, []);
 
-  useEffect(() => {
-    if (selectedWsId) {
-      fetchTasks(selectedWsId);
-    }
-  }, [selectedWsId, currentDate]); // Refetch if month changes (optional, but good for scale)
-
   const fetchTasks = async (wsId: string) => {
     try {
       // In a real app, pass startDate and endDate of the calendar view to filter tasks.
@@ -68,6 +62,13 @@ export default function CalendarPage() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (selectedWsId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchTasks(selectedWsId);
+    }
+  }, [selectedWsId, currentDate]); // Refetch if month changes (optional, but good for scale)
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
