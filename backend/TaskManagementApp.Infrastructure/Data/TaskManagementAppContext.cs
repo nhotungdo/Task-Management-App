@@ -307,7 +307,7 @@ public partial class TaskManagementAppContext : DbContext
             entity.HasOne(d => d.CustomField)
                 .WithMany(cf => cf.Values)
                 .HasForeignKey(d => d.CustomFieldId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ProjectTemplate>(entity =>

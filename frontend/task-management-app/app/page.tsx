@@ -39,7 +39,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,10 +47,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchInitData = async () => {
       try {
-        let wsData, usersData, notifData, meData;
+        let wsData, usersData, meData;
         try { wsData = (await api.get("/Workspaces")).data; } catch (e) { console.warn("Failed to load workspaces"); }
         try { usersData = (await api.get("/Users")).data; } catch (e) { console.warn("Failed to load users"); }
-        try { notifData = (await api.get("/Notifications")).data; } catch (e) { console.warn("Failed to load notifications"); }
         try { meData = (await api.get("/Auth/me")).data; } catch (e) { console.warn("Failed to load me"); }
 
         if (meData) setCurrentUser(meData);
@@ -68,7 +66,6 @@ export default function Dashboard() {
           });
         }
         setUsersMap(uMap);
-        if (notifData) setNotifications(notifData);
       } catch (err) {
         console.error("Failed to load initial data", err);
       }
@@ -81,7 +78,7 @@ export default function Dashboard() {
       setLoading(true);
       api.get(`/Tasks?workspaceId=${activeWorkspaceId}`)
         .then(res => setTasks(res.data.items || []))
-        .catch(() => console.error("Failed to load tasks"))
+        .catch((err) => console.error("Failed to load tasks", err))
         .finally(() => setLoading(false));
     }
   };

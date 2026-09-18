@@ -23,16 +23,25 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  CheckCircle2,
-  Clock
+  Clock,
+  Inbox
 } from "lucide-react";
 import api from "@/lib/api";
 import AiAssistantModal from "@/components/AiAssistantModal";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
 
 interface UserData {
   fullName?: string;
   email?: string;
   role?: string;
+}
+
+interface NotificationData {
+  notificationId: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 const NAV_ITEMS = [
@@ -54,13 +63,35 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [notifCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const [isFetchingNotifs, setIsFetchingNotifs] = useState(false);
 
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/welcome";
+
+  const fetchNotifications = async () => {
+    try {
+      setIsFetchingNotifs(true);
+      const res = await api.get("/Notifications");
+      setNotifications(res.data);
+    } catch (e) {
+      console.error("Failed to load notifications", e);
+    } finally {
+      setIsFetchingNotifs(false);
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await api.post(`/Notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
+    } catch (e) {
+      console.error("Failed to mark as read", e);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthPage) {
@@ -76,6 +107,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             router.push("/login");
           })
           .finally(() => { setIsLoading(false); });
+        
+        // Fetch notifications
+        fetchNotifications();
       }
     } else {
       setIsLoading(false);
@@ -308,69 +342,91 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             {/* Notifications Dropdown */}
             <div className="relative">
               <button
-                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors relative ${
-                  notifMenuOpen ? "bg-slate-100 text-slate-800" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                onClick={() => {
+                  setNotifMenuOpen(!notifMenuOpen);
+                  if (!notifMenuOpen) fetchNotifications();
+                }}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all relative ${
+                  notifMenuOpen ? "bg-indigo-50 text-indigo-600 shadow-inner" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                 }`}
                 title="Thông báo"
               >
-                <Bell size={17} />
-                {notifCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+                <Bell size={17} className={notifMenuOpen ? "animate-pulse" : ""} />
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
                 )}
               </button>
 
               {notifMenuOpen && (
                 <div 
-                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50 animate-scale-in"
+                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200/60 rounded-2xl shadow-2xl overflow-hidden z-50 animate-scale-in origin-top-right backdrop-blur-xl"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-xs text-slate-800">Thông báo mới</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">3 chưa đọc</span>
-                    </div>
-                    <button className="text-[11px] font-semibold text-indigo-600 hover:underline">Đã đọc tất cả</button>
-                  </div>
-
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
-                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer bg-indigo-50/20">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">AD</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-700 leading-snug">
-                          <strong>Quản trị viên</strong> đã giao cho bạn công việc <span className="font-semibold text-slate-900">&quot;Thiết kế giao diện SaaS&quot;</span>
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> 10 phút trước</p>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer">
-                      <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold shrink-0">SYS</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-700 leading-snug">
-                          Dự án <span className="font-semibold text-slate-900">Task-Management-App</span> có 2 công việc sắp đến hạn.
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> 1 giờ trước</p>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 flex gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer">
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
-                        <CheckCircle2 size={15} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-700 leading-snug">
-                          Hải Quân đã hoàn thành công việc <span className="font-semibold text-slate-900">&quot;API Unit Tests&quot;</span>
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><Clock size={10} /> Hôm qua</p>
-                      </div>
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-sm">
+                    <div className="flex items-center gap-2.5">
+                      <h4 className="font-bold text-[13px] text-slate-800">Thông báo</h4>
+                      {notifications.filter(n => !n.isRead).length > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                          {notifications.filter(n => !n.isRead).length} chưa đọc
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-2.5 border-t border-slate-100 text-center bg-slate-50/50">
-                    <Link href="/settings" className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
-                      Xem tất cả hoạt động
-                    </Link>
+                  <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-100 bg-white">
+                    {isFetchingNotifs && notifications.length === 0 ? (
+                      <div className="p-6 text-center flex flex-col items-center justify-center space-y-3">
+                        <div className="w-8 h-8 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
+                        <p className="text-xs text-slate-500 font-medium">Đang tải...</p>
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+                        <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-1">
+                          <Inbox size={24} />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-700">Không có thông báo mới</p>
+                        <p className="text-xs text-slate-500">Bạn đã cập nhật tất cả thông tin!</p>
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div 
+                          key={notif.notificationId}
+                          onClick={() => !notif.isRead && handleMarkAsRead(notif.notificationId)}
+                          className={`p-4 flex gap-3.5 transition-all cursor-pointer ${
+                            notif.isRead ? "hover:bg-slate-50 bg-white opacity-70" : "hover:bg-indigo-50/50 bg-indigo-50/30"
+                          }`}
+                        >
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm ${
+                            notif.isRead ? "bg-slate-100 text-slate-500" : "bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-700"
+                          }`}>
+                            <Bell size={15} />
+                          </div>
+                          <div className="flex-1 min-w-0 pt-0.5">
+                            <p className={`text-[12.5px] leading-snug ${notif.isRead ? "text-slate-600 font-medium" : "text-slate-800 font-semibold"}`}>
+                              {notif.message}
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
+                              <Clock size={10} className={notif.isRead ? "text-slate-300" : "text-indigo-400"} /> 
+                              {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: vi })}
+                            </p>
+                          </div>
+                          {!notif.isRead && (
+                            <div className="shrink-0 flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-indigo-600 shadow-sm shadow-indigo-200" />
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-2.5 border-t border-slate-100 text-center bg-slate-50/80 backdrop-blur-sm">
+                    <button 
+                      onClick={() => fetchNotifications()} 
+                      className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
+                    >
+                      Tải lại thông báo
+                    </button>
                   </div>
                 </div>
               )}

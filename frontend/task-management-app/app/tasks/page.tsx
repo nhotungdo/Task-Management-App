@@ -4,9 +4,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { isBefore, isToday, isTomorrow, isAfter, addDays, startOfDay, format } from "date-fns";
-import { CheckCircle2, Clock, AlertCircle, CalendarClock, FolderOpen, ChevronDown, ChevronRight, Sparkles, Target, Plus, Tag } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarClock, FolderOpen, ChevronRight, Sparkles, Target, Plus, Tag as TagIcon, Search, LayoutGrid, List } from "lucide-react";
 import api from "@/lib/api";
 import CreateTaskModal from "@/components/CreateTaskModal";
+import TaskDetailDrawer from "@/components/TaskDetailDrawer";
+import { STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_DOTS } from "@/lib/constants";
 
 interface Tag {
   tagId: string;
@@ -27,23 +29,7 @@ interface Task {
   tags?: Tag[];
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  Low: "bg-blue-50 text-blue-600 border-blue-100",
-  Normal: "bg-slate-50 text-slate-500 border-slate-200",
-  Medium: "bg-amber-50 text-amber-700 border-amber-100",
-  High: "bg-red-50 text-red-600 border-red-100",
-};
-const PRIORITY_LABELS: Record<string, string> = { Low: "Thấp", Normal: "Bình thường", Medium: "Trung bình", High: "Cao" };
-const PRIORITY_DOTS: Record<string, string> = { Low: "bg-blue-400", Normal: "bg-slate-400", Medium: "bg-amber-400", High: "bg-red-500" };
-const STATUS_COLORS: Record<string, string> = {
-  "To Do": "bg-slate-100 text-slate-500",
-  "In Progress": "bg-amber-50 text-amber-700",
-  "In Review": "bg-purple-50 text-purple-700",
-  "Done": "bg-emerald-50 text-emerald-700",
-};
-const STATUS_LABELS: Record<string, string> = {
-  "To Do": "Cần làm", "In Progress": "Đang làm", "In Review": "Chờ duyệt", "Done": "Hoàn thành",
-};
+// Removed inline constants
 
 function safeDate(d?: string | null): string {
   if (!d) return "";
@@ -73,15 +59,15 @@ function CounterKPI({ target, label, color, icon, delay }: { target: number; lab
   }, [target]);
 
   return (
-    <div className={`animate-stagger ${delay} group ${color} rounded-2xl p-4 text-center hover:scale-105 transition-all duration-200 cursor-default`}>
+    <div className={`animate-stagger ${delay} group ${color} rounded-2xl p-4 text-center hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/10 border border-white/50 transition-all duration-300 cursor-default backdrop-blur-sm`}>
       <div className="flex items-center justify-center mb-2">{icon}</div>
-      <p className="text-3xl font-black text-slate-900">{val}</p>
-      <p className="text-xs text-slate-500 mt-1 font-medium">{label}</p>
+      <p className="text-3xl font-black text-slate-900 drop-shadow-sm">{val}</p>
+      <p className="text-xs text-slate-500 mt-1 font-semibold">{label}</p>
     </div>
   );
 }
 
-function TaskCard({ task, workspaceNames, cardIdx }: { task: Task; workspaceNames: Record<string, string>; cardIdx: number }) {
+function TaskCard({ task, workspaceNames, cardIdx, onTaskClick }: { task: Task; workspaceNames: Record<string, string>; cardIdx: number; onTaskClick: (id: string) => void }) {
   const wsName = task.workspaceId ? workspaceNames[task.workspaceId] : null;
   const today = startOfDay(new Date());
   const isOverdue = task.dueDate && isBefore(new Date(task.dueDate), today) && task.status !== "Done";
@@ -91,7 +77,7 @@ function TaskCard({ task, workspaceNames, cardIdx }: { task: Task; workspaceName
   const delayClass = delays[cardIdx % delays.length];
 
   return (
-    <Link href={task.workspaceId ? `/workspaces/${task.workspaceId}?tab=list` : "#"}>
+    <div onClick={() => onTaskClick(task.taskId)}>
       <div className={`animate-stagger ${delayClass} group bg-white rounded-2xl p-4 border hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer
         ${isOverdue ? "border-red-200 animate-overdue hover:shadow-red-500/10" : "border-slate-200 hover:border-indigo-200 hover:shadow-indigo-500/10"}`}>
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -152,51 +138,106 @@ function TaskCard({ task, workspaceNames, cardIdx }: { task: Task; workspaceName
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 }
 
-function Section({ title, icon, tasks, colorClass, workspaceNames, emptyMsg, emptyIcon, isOverdueSection = false }: {
-  title: string;
-  icon: React.ReactNode;
-  tasks: Task[];
-  colorClass: string;
-  workspaceNames: Record<string, string>;
-  emptyMsg: string;
-  emptyIcon: string;
-  isOverdueSection?: boolean;
-}) {
-  const [collapsed, setCollapsed] = useState(false);
+
+
+function ListView({ tasks, workspaceNames, onTaskClick }: { tasks: Task[], workspaceNames: Record<string, string>, onTaskClick: (id: string) => void }) {
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+        <span className="text-4xl mb-3 animate-float inline-block">📭</span>
+        <p className="text-base font-semibold text-slate-700">Không tìm thấy công việc nào</p>
+        <p className="text-xs mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+      </div>
+    );
+  }
 
   return (
-    <div className={`mb-8 animate-slide-up ${isOverdueSection && tasks.length > 0 ? "animate-danger-glow rounded-2xl" : ""}`}>
-      <button
-        onClick={() => setCollapsed(c => !c)}
-        className="flex items-center gap-2.5 mb-4 w-full text-left group"
-      >
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${colorClass} transition-transform group-hover:scale-110`}>{icon}</div>
-        <h2 className="font-black text-slate-800 text-base">{title}</h2>
-        <span className={`ml-1 text-xs font-bold px-2 py-0.5 rounded-full transition-all animate-pop-in ${
-          isOverdueSection && tasks.length > 0 ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-500"
-        } ${isOverdueSection && tasks.length > 0 ? "animate-bounce" : ""}`}>{tasks.length}</span>
-        <div className="flex-1" />
-        <span className="text-slate-300 group-hover:text-slate-500 transition-colors">
-          {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-        </span>
-      </button>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-slide-up">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-500 uppercase tracking-wider">
+            <th className="px-5 py-3.5 font-bold">Tên công việc</th>
+            <th className="px-5 py-3.5 font-bold">Dự án</th>
+            <th className="px-5 py-3.5 font-bold">Trạng thái</th>
+            <th className="px-5 py-3.5 font-bold">Ưu tiên</th>
+            <th className="px-5 py-3.5 font-bold">Hạn chót</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {tasks.map((task, i) => (
+            <tr key={task.taskId} onClick={() => onTaskClick(task.taskId)} className="hover:bg-slate-50 transition-colors group cursor-pointer" style={{ animationDelay: `${i * 30}ms` }}>
+              <td className="px-5 py-3.5">
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${task.status === 'Done' ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 group-hover:border-indigo-400'}`}>
+                    {task.status === "Done" && <CheckCircle2 size={10} className="text-white" />}
+                  </div>
+                  <span className={`font-semibold text-xs transition-colors ${task.status === 'Done' ? 'line-through text-slate-400' : 'text-slate-800 group-hover:text-indigo-600'}`}>{task.title}</span>
+                </div>
+              </td>
+              <td className="px-5 py-3.5 text-xs text-slate-500 font-medium">
+                 {workspaceNames[task.workspaceId || ""] || "N/A"}
+              </td>
+              <td className="px-5 py-3.5">
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[task.status] ?? ""}`}>{STATUS_LABELS[task.status] || task.status}</span>
+              </td>
+              <td className="px-5 py-3.5">
+                <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border ${PRIORITY_COLORS[task.priority] ?? "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOTS[task.priority] ?? "bg-slate-400"}`} />
+                  {PRIORITY_LABELS[task.priority] || task.priority}
+                </span>
+              </td>
+              <td className="px-5 py-3.5 text-xs text-slate-500 font-medium">
+                {safeDate(task.dueDate) || "-"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-      {!collapsed && (
-        tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 animate-slide-up">
-            <span className="text-3xl mb-2 animate-float inline-block">{emptyIcon}</span>
-            <p className="text-sm font-medium">{emptyMsg}</p>
+function KanbanView({ tasksByStatus, workspaceNames, onTaskClick }: { tasksByStatus: Record<string, Task[]>, workspaceNames: Record<string, string>, onTaskClick: (id: string) => void }) {
+  const columns = [
+    { id: "To Do", label: "Cần làm", color: "bg-slate-100/70", dot: "bg-slate-400" },
+    { id: "In Progress", label: "Đang làm", color: "bg-indigo-50/70", dot: "bg-indigo-500" },
+    { id: "In Review", label: "Chờ duyệt", color: "bg-amber-50/70", dot: "bg-amber-500" },
+    { id: "Done", label: "Hoàn thành", color: "bg-emerald-50/70", dot: "bg-emerald-500" }
+  ];
+
+  const totalTasks = Object.values(tasksByStatus).reduce((acc, tasks) => acc + tasks.length, 0);
+  if (totalTasks === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+        <span className="text-4xl mb-3 animate-float inline-block">📭</span>
+        <p className="text-base font-semibold text-slate-700">Không tìm thấy công việc nào</p>
+        <p className="text-xs mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-5 h-full overflow-x-auto pb-4 items-start animate-slide-up" style={{ scrollbarWidth: "thin" }}>
+      {columns.map(col => (
+        <div key={col.id} className={`flex-shrink-0 w-[300px] rounded-2xl ${col.color} p-3 flex flex-col max-h-[70vh] border border-slate-200/50 backdrop-blur-sm shadow-sm`}>
+          <div className="flex items-center justify-between mb-4 px-1.5 pt-1">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${col.dot} shadow-sm`} />
+              <h3 className="font-bold text-sm text-slate-800">{col.label}</h3>
+            </div>
+            <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full shadow-sm">{tasksByStatus[col.id]?.length || 0}</span>
           </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {tasks.map((t, i) => <TaskCard key={t.taskId} task={t} workspaceNames={workspaceNames} cardIdx={i} />)}
+          <div className="flex flex-col gap-3 overflow-y-auto pr-1 pb-2" style={{ scrollbarWidth: "thin" }}>
+            {(tasksByStatus[col.id] || []).map((t, i) => (
+              <TaskCard key={t.taskId} task={t} workspaceNames={workspaceNames} cardIdx={i} onTaskClick={onTaskClick} />
+            ))}
           </div>
-        )
-      )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -205,9 +246,12 @@ export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [workspaceNames, setWorkspaceNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "High" | "Medium">("all");
-  const [activeFilter, setActiveFilter] = useState<"all" | "High" | "Medium">("all");
+  const [filter, setFilter] = useState<"all" | "High" | "Medium" | "Low">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "High" | "Medium" | "Low">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -241,21 +285,40 @@ export default function MyTasksPage() {
   const inSevenDays = addDays(today, 7);
   const filtered = filter === "all" ? tasks : tasks.filter(t => t.priority === filter);
 
-  const overdue = filtered.filter(t => t.dueDate && isBefore(new Date(t.dueDate), today) && t.status !== "Done");
-  const dueToday = filtered.filter(t => t.dueDate && isToday(new Date(t.dueDate)) && t.status !== "Done");
-  const upcoming = filtered.filter(t => {
+  const handleFilter = (f: "all" | "High" | "Medium" | "Low") => {
+    setActiveFilter(f);
+    setFilter(f);
+  };
+
+  const finalFiltered = filtered.filter(t => 
+    !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const overdue = finalFiltered.filter(t => t.dueDate && isBefore(new Date(t.dueDate), today) && t.status !== "Done");
+  const dueToday = finalFiltered.filter(t => t.dueDate && isToday(new Date(t.dueDate)) && t.status !== "Done");
+  const upcoming = finalFiltered.filter(t => {
     if (!t.dueDate) return false;
     const due = new Date(t.dueDate);
     return isAfter(due, today) && isBefore(due, inSevenDays) && !isToday(due) && t.status !== "Done";
   });
-  const noDueDate = filtered.filter(t => !t.dueDate && t.status !== "Done");
-  const completed = filtered.filter(t => t.status === "Done");
+  const noDueDate = finalFiltered.filter(t => !t.dueDate && t.status !== "Done");
+  const completed = finalFiltered.filter(t => t.status === "Done");
   const totalPending = overdue.length + dueToday.length + upcoming.length + noDueDate.length;
 
-  const handleFilter = (f: "all" | "High" | "Medium") => {
-    setActiveFilter(f);
-    setFilter(f);
+  const tasksByStatus: Record<string, Task[]> = {
+    "To Do": [],
+    "In Progress": [],
+    "In Review": [],
+    "Done": []
   };
+  
+  finalFiltered.forEach(t => {
+    if (tasksByStatus[t.status]) {
+      tasksByStatus[t.status].push(t);
+    } else {
+      tasksByStatus["To Do"].push(t); // fallback
+    }
+  });
 
   if (loading) return (
     <div className="flex-1 flex items-center justify-center">
@@ -283,37 +346,75 @@ export default function MyTasksPage() {
                 <Target size={16} className="text-indigo-500 animate-pulse" />
                 <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">Năng suất cá nhân</span>
               </div>
-              <h1 className="text-3xl font-black text-slate-900">Công việc của tôi</h1>
+              <h1 className="text-3xl font-black bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">Công việc của tôi</h1>
               <p className="text-sm text-slate-500 mt-1">
                 <span className="font-bold text-slate-700">{totalPending}</span> việc cần làm ·
                 <span className="font-bold text-emerald-600 ml-1">{completed.length}</span> hoàn thành
               </p>
             </div>
 
-            <div className="flex items-center gap-3 animate-slide-up delay-100">
-              {/* Filter pills */}
-              <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
-                {(["all", "High", "Medium"] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => handleFilter(f)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      activeFilter === f ? "bg-white shadow-sm text-indigo-600 scale-105" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                    }`}
-                  >
-                    {f === "all" ? "Tất cả" : f === "High" ? "🔴 Ưu tiên cao" : "⬆ Trung bình"}
-                  </button>
-                ))}
+            <div className="flex flex-col items-end gap-3 animate-slide-up delay-100">
+              <div className="flex items-center gap-3">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm công việc..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl text-xs font-medium text-slate-700 outline-none transition-all w-56 placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* Add Task Button */}
+                <button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all hover:-translate-y-0.5"
+                >
+                  <Plus size={14} strokeWidth={2.5} />
+                  <span>Thêm công việc</span>
+                </button>
               </div>
 
-              {/* Add Task Button */}
-              <button
-                onClick={() => setIsCreateOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all hover:-translate-y-0.5"
-              >
-                <Plus size={14} strokeWidth={2.5} />
-                <span>Thêm công việc</span>
-              </button>
+              <div className="flex items-center gap-3">
+                {/* View Toggle */}
+                <div className="flex bg-slate-100 rounded-xl p-1 gap-1 border border-slate-200/50">
+                  <button
+                    onClick={() => setViewMode("kanban")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${
+                      viewMode === "kanban" ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <LayoutGrid size={13} /> Dạng Bảng
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${
+                      viewMode === "list" ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <List size={13} /> Danh sách
+                  </button>
+                </div>
+
+                <div className="w-px h-6 bg-slate-200" />
+
+                {/* Filter pills */}
+                <div className="flex bg-slate-100 rounded-xl p-1 gap-1 border border-slate-200/50">
+                  {(["all", "High", "Medium", "Low"] as const).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => handleFilter(f)}
+                      className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 ${
+                        activeFilter === f ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+                      }`}
+                    >
+                      {f === "all" ? "Tất cả" : f === "High" ? "🔴 Cao" : f === "Medium" ? "🟡 Trung bình" : "🔵 Thấp"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -332,48 +433,12 @@ export default function MyTasksPage() {
       </div>
 
       {/* ── Content Sections ── */}
-      <div className="px-8 py-6">
-        <Section
-          title="Quá hạn"
-          icon={<AlertCircle size={16} className="text-red-500" />}
-          tasks={overdue} colorClass="bg-red-50"
-          workspaceNames={workspaceNames}
-          emptyMsg="Tuyệt vời! Không có task nào bị quá hạn"
-          emptyIcon="🎉"
-          isOverdueSection
-        />
-        <Section
-          title="Hôm nay"
-          icon={<CalendarClock size={16} className="text-orange-500" />}
-          tasks={dueToday} colorClass="bg-orange-50"
-          workspaceNames={workspaceNames}
-          emptyMsg="Không có task nào đến hạn hôm nay"
-          emptyIcon="☀️"
-        />
-        <Section
-          title="7 ngày tới"
-          icon={<Clock size={16} className="text-amber-500" />}
-          tasks={upcoming} colorClass="bg-amber-50"
-          workspaceNames={workspaceNames}
-          emptyMsg="Không có task sắp đến hạn trong 7 ngày"
-          emptyIcon="📅"
-        />
-        <Section
-          title="Chưa có hạn"
-          icon={<Target size={16} className="text-slate-400" />}
-          tasks={noDueDate} colorClass="bg-slate-100"
-          workspaceNames={workspaceNames}
-          emptyMsg="Tất cả task đều đã được đặt ngày hạn"
-          emptyIcon="✅"
-        />
-        <Section
-          title="Đã hoàn thành"
-          icon={<CheckCircle2 size={16} className="text-emerald-500" />}
-          tasks={completed} colorClass="bg-emerald-50"
-          workspaceNames={workspaceNames}
-          emptyMsg="Chưa có task nào hoàn thành"
-          emptyIcon="🏁"
-        />
+      <div className="px-8 py-6 h-full min-h-[500px]">
+        {viewMode === "kanban" ? (
+          <KanbanView tasksByStatus={tasksByStatus} workspaceNames={workspaceNames} onTaskClick={setSelectedTaskId} />
+        ) : (
+          <ListView tasks={finalFiltered} workspaceNames={workspaceNames} onTaskClick={setSelectedTaskId} />
+        )}
       </div>
 
       {/* ── Unified Task Creation Modal ── */}
@@ -382,6 +447,15 @@ export default function MyTasksPage() {
         onClose={() => setIsCreateOpen(false)}
         onTaskCreated={() => fetchData()}
       />
+
+      {/* ── Task Detail Drawer ── */}
+      {selectedTaskId && (
+        <TaskDetailDrawer
+          taskId={selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+          onRefresh={fetchData}
+        />
+      )}
     </div>
   );
 }

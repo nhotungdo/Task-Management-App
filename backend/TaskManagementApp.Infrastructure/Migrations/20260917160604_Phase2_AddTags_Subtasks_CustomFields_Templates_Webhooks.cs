@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -175,7 +175,7 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         column: x => x.CustomFieldId,
                         principalTable: "CustomFields",
                         principalColumn: "CustomFieldId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_TaskCustomFieldValues_Tasks_TaskId",
                         column: x => x.TaskId,
@@ -222,7 +222,7 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         column: x => x.TagsTagId,
                         principalTable: "Tags",
                         principalColumn: "TagId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_TaskTags_Tasks_TasksTaskId",
                         column: x => x.TasksTaskId,
