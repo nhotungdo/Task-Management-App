@@ -19,6 +19,10 @@ public partial class User
 
     public DateTime? UpdatedAt { get; set; }
 
+    public bool Is2FAEnabled { get; set; } = false;
+    
+    public string? TwoFactorSecret { get; set; }
+
     public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();

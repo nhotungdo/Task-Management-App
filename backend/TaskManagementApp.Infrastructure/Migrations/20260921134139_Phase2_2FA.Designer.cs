@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagementApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TaskManagementApp.Infrastructure.Data;
 namespace TaskManagementApp.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskManagementAppContext))]
-    partial class TaskManagementAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260921134139_Phase2_2FA")]
+    partial class Phase2_2FA
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

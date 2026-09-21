@@ -201,46 +201,7 @@ function ListView({ tasks, workspaceNames, onTaskClick }: { tasks: Task[], works
   );
 }
 
-function KanbanView({ tasksByStatus, workspaceNames, onTaskClick }: { tasksByStatus: Record<string, Task[]>, workspaceNames: Record<string, string>, onTaskClick: (id: string) => void }) {
-  const columns = [
-    { id: "To Do", label: "Cần làm", color: "bg-slate-100/70", dot: "bg-slate-400" },
-    { id: "In Progress", label: "Đang làm", color: "bg-indigo-50/70", dot: "bg-indigo-500" },
-    { id: "In Review", label: "Chờ duyệt", color: "bg-amber-50/70", dot: "bg-amber-500" },
-    { id: "Done", label: "Hoàn thành", color: "bg-emerald-50/70", dot: "bg-emerald-500" }
-  ];
-
-  const totalTasks = Object.values(tasksByStatus).reduce((acc, tasks) => acc + tasks.length, 0);
-  if (totalTasks === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-        <span className="text-4xl mb-3 animate-float inline-block">📭</span>
-        <p className="text-base font-semibold text-slate-700">Không tìm thấy công việc nào</p>
-        <p className="text-xs mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex gap-5 h-full overflow-x-auto pb-4 items-start animate-slide-up" style={{ scrollbarWidth: "thin" }}>
-      {columns.map(col => (
-        <div key={col.id} className={`flex-shrink-0 w-[300px] rounded-2xl ${col.color} p-3 flex flex-col max-h-[70vh] border border-slate-200/50 backdrop-blur-sm shadow-sm`}>
-          <div className="flex items-center justify-between mb-4 px-1.5 pt-1">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${col.dot} shadow-sm`} />
-              <h3 className="font-bold text-sm text-slate-800">{col.label}</h3>
-            </div>
-            <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full shadow-sm">{tasksByStatus[col.id]?.length || 0}</span>
-          </div>
-          <div className="flex flex-col gap-3 overflow-y-auto pr-1 pb-2" style={{ scrollbarWidth: "thin" }}>
-            {(tasksByStatus[col.id] || []).map((t, i) => (
-              <TaskCard key={t.taskId} task={t} workspaceNames={workspaceNames} cardIdx={i} onTaskClick={onTaskClick} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+import KanbanBoard from "@/components/KanbanBoard";
 
 export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -435,7 +396,22 @@ export default function MyTasksPage() {
       {/* ── Content Sections ── */}
       <div className="px-8 py-6 h-full min-h-[500px]">
         {viewMode === "kanban" ? (
-          <KanbanView tasksByStatus={tasksByStatus} workspaceNames={workspaceNames} onTaskClick={setSelectedTaskId} />
+          <KanbanBoard 
+            tasksByStatus={tasksByStatus} 
+            workspaceNames={workspaceNames} 
+            onTaskClick={setSelectedTaskId} 
+            onTaskMove={async (taskId, newStatus) => {
+              const taskToUpdate = tasks.find(t => t.taskId === taskId);
+              if (!taskToUpdate || taskToUpdate.status === newStatus) return;
+              // Optimistic update
+              setTasks(prev => prev.map(t => t.taskId === taskId ? { ...t, status: newStatus } : t));
+              try {
+                await api.put(`/Tasks/${taskId}`, { ...taskToUpdate, status: newStatus });
+              } catch {
+                fetchData(); // revert on error
+              }
+            }}
+          />
         ) : (
           <ListView tasks={finalFiltered} workspaceNames={workspaceNames} onTaskClick={setSelectedTaskId} />
         )}

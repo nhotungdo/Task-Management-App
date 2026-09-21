@@ -22,7 +22,10 @@ public partial class TaskManagementAppContext : DbContext
     // Workspace & Members
     public virtual DbSet<Workspace> Workspaces { get; set; }
     public virtual DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
+    public virtual DbSet<TaskAuditLog> TaskAuditLogs { get; set; }
     public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+    public virtual DbSet<Goal> Goals { get; set; }
+    public virtual DbSet<KeyResult> KeyResults { get; set; }
 
     // Phase 1 — New Entities
     public virtual DbSet<TaskDependency> TaskDependencies { get; set; }
@@ -39,13 +42,16 @@ public partial class TaskManagementAppContext : DbContext
     public virtual DbSet<TemplateTask> TemplateTasks { get; set; }
     public virtual DbSet<WebhookEndpoint> WebhookEndpoints { get; set; }
     public virtual DbSet<WebhookEvent> WebhookEvents { get; set; }
+    public virtual DbSet<TaskApproval> TaskApprovals { get; set; }
 
     // Integrations
     public virtual DbSet<SlackInstallation> SlackInstallations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-         => optionsBuilder.UseSqlServer("Data Source=NHOTUNG\\SQLEXPRESS;Database=TaskManagementApp;User Id=sa;Password=123;TrustServerCertificate=true;Trusted_Connection=SSPI;Encrypt=false;"); 
+         => optionsBuilder
+            .UseSqlServer("Data Source=NHOTUNG\\SQLEXPRESS;Database=TaskManagementApp;User Id=sa;Password=123;TrustServerCertificate=true;Trusted_Connection=SSPI;Encrypt=false;")
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.NavigationBaseIncludeIgnored));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) 
     { 
@@ -397,7 +403,140 @@ public partial class TaskManagementAppContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<TaskAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.TaskAuditLogId);
+            entity.Property(e => e.TaskAuditLogId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Action).HasMaxLength(100);
+            entity.Property(e => e.FieldName).HasMaxLength(100);
+            entity.Property(e => e.OldValue).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.NewValue).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany()
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Goal>(entity =>
+        {
+            entity.HasKey(e => e.GoalId);
+            entity.Property(e => e.GoalId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Title).HasMaxLength(255);
+            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("On Track");
+            entity.Property(e => e.Unit).HasMaxLength(50).HasDefaultValue("percent");
+            entity.Property(e => e.TargetValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CurrentValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.Deadline).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Workspace)
+                .WithMany()
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Owner)
+                .WithMany()
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<KeyResult>(entity =>
+        {
+            entity.HasKey(e => e.KeyResultId);
+            entity.Property(e => e.KeyResultId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Title).HasMaxLength(255);
+            entity.Property(e => e.TargetValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CurrentValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Goal)
+                .WithMany(p => p.KeyResults)
+                .HasForeignKey(d => d.GoalId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TaskApproval>(entity =>
+        {
+            entity.HasKey(e => e.TaskApprovalId);
+            entity.Property(e => e.TaskApprovalId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Pending");
+            entity.Property(e => e.Comments).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.RespondedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Task)
+                .WithMany()
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Approver)
+                .WithMany()
+                .HasForeignKey(d => d.ApproverId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         OnModelCreatingPartial(modelBuilder);
+    }
+
+    public override async System.Threading.Tasks.Task<int> SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker.Entries<TaskManagementApp.Domain.Entities.Task>()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+            .ToList();
+
+        var auditLogs = new List<TaskAuditLog>();
+
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Added)
+            {
+                auditLogs.Add(new TaskAuditLog
+                {
+                    TaskId = entry.Entity.TaskId,
+                    Action = "Created",
+                    UserId = entry.Entity.OwnerId // Approximation, might need HttpContextAccessor for accurate user
+                });
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                foreach (var property in entry.Properties)
+                {
+                    if (property.IsModified)
+                    {
+                        var originalValue = property.OriginalValue?.ToString();
+                        var currentValue = property.CurrentValue?.ToString();
+                        if (originalValue != currentValue)
+                        {
+                            auditLogs.Add(new TaskAuditLog
+                            {
+                                TaskId = entry.Entity.TaskId,
+                                Action = "Modified",
+                                FieldName = property.Metadata.Name,
+                                OldValue = originalValue,
+                                NewValue = currentValue
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        if (auditLogs.Any())
+        {
+            TaskAuditLogs.AddRange(auditLogs);
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

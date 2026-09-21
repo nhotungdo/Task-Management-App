@@ -58,6 +58,16 @@ public class TaskAssignmentsController : ControllerBase
         _db.TaskAssignments.Add(assignment);
         await _db.SaveChangesAsync();
         await _taskHub.Clients.Group($"workspace:{task.WorkspaceId}").SendAsync("TaskAssigned", new { taskId, userId = dto.UserId });
+
+        // Send Email Notification
+        var emailService = HttpContext.RequestServices.GetService(typeof(IEmailService)) as IEmailService;
+        if (emailService != null && !string.IsNullOrEmpty(user.Email))
+        {
+            var frontendUrl = _db.Workspaces.Any(w => w.WorkspaceId == task.WorkspaceId) ? $"http://localhost:3000/workspaces/{task.WorkspaceId}?tab=board" : "http://localhost:3000/tasks";
+            var htmlBody = EmailTemplateBuilder.BuildTaskAssignedTemplate(user.FullName ?? user.Email, task.Title, frontendUrl);
+            _ = emailService.SendAsync(user.Email, $"Bạn được phân công: {task.Title}", htmlBody);
+        }
+
         return Ok(assignment);
     }
 

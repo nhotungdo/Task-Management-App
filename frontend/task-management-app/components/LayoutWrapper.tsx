@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import AiAssistantModal from "@/components/AiAssistantModal";
+import GlobalSearchModal from "@/components/GlobalSearchModal";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -67,8 +68,20 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [isFetchingNotifs, setIsFetchingNotifs] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/welcome";
 
@@ -319,12 +332,14 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           
           {/* Universal Search Bar */}
           <div className="flex-1 max-w-md relative">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm nhanh công việc, dự án... (Ctrl + K)"
-              className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-100/70 border border-transparent rounded-full focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all text-slate-700 placeholder:text-slate-400"
-            />
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
+              className="w-full flex items-center text-left pl-9 pr-4 py-1.5 text-xs bg-slate-100/70 border border-transparent rounded-full hover:bg-slate-200/70 hover:border-slate-300 transition-all text-slate-500"
+            >
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <span className="flex-1 truncate">Tìm kiếm nhanh công việc, bình luận...</span>
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-400 shadow-sm ml-2">Ctrl K</kbd>
+            </button>
           </div>
 
           {/* Right Action Icons */}
@@ -483,18 +498,22 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {/* ── Floating AI Assistant Trigger Button (Bottom Right) ── */}
       <button
         onClick={() => setIsAiModalOpen(true)}
-        className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        className="fixed bottom-20 md:bottom-6 right-6 w-12 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/30 flex items-center justify-center transition-transform hover:-translate-y-1 z-40 active:scale-95"
+        title="Trợ lý AI"
       >
-        <Sparkles size={15} className="animate-pulse" />
-        <span>✨ Trợ lý AI</span>
+        <Sparkles size={20} />
       </button>
 
-      {/* AI Assistant Modal */}
+      {/* ── Modals ── */}
       <AiAssistantModal 
         isOpen={isAiModalOpen} 
         onClose={() => setIsAiModalOpen(false)} 
       />
-
+      
+      <GlobalSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-location-assign-relative-destination */
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-location-assign-relative-destination */
 "use client";
 
  
@@ -69,8 +69,12 @@ export default function SettingsPage() {
    
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notifStates, setNotifStates] = useState({ email: true, push: true, weekly: false });
+
+  // 2FA state
+  const [setup2FAData, setSetup2FAData] = useState<{ secret: string, qrCode: string } | null>(null);
+  const [twoFACode, setTwoFACode] = useState("");
+  const [loading2FA, setLoading2FA] = useState(false);
 
   useEffect(() => {
     api.get("/Auth/me").then(res => { setUser(res.data); }).catch(console.error);
@@ -99,7 +103,45 @@ export default function SettingsPage() {
 
   const handleSavePassword = () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); showToast("Đã cập nhật mật khẩu mới! 🔒"); }, 700);
+    setTimeout(() => { setLoading(false); showToast("Đã cập nhật mật khẩu! 🔒"); }, 700);
+  };
+
+  const handleSetup2FA = async () => {
+    try {
+      setLoading2FA(true);
+      const res = await api.get("/Auth/2fa/setup");
+      setSetup2FAData({ secret: res.data.secret, qrCode: res.data.qrCode });
+    } catch(err) {
+      showToast("Lỗi khi cài đặt 2FA", "error");
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    try {
+      setLoading2FA(true);
+      await api.post("/Auth/2fa/verify", { code: twoFACode });
+      showToast("Xác thực 2 bước đã được bật!", "success");
+      setSetup2FAData(null);
+      setTwoFACode("");
+      setUser({ ...user, is2FAEnabled: true });
+    } catch(err) {
+      showToast("Mã xác thực không hợp lệ", "error");
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if(!confirm("Bạn có chắc muốn tắt Xác thực 2 bước?")) return;
+    try {
+      await api.post("/Auth/2fa/disable");
+      showToast("Đã tắt xác thực 2 bước", "success");
+      setUser({ ...user, is2FAEnabled: false });
+    } catch(err) {
+      showToast("Lỗi khi tắt 2FA", "error");
+    }
   };
 
   const COLORS = [
@@ -287,19 +329,49 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/60">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center animate-pop-in delay-100">
-                        <Smartphone size={20} className="text-emerald-600" />
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center animate-pop-in delay-100">
+                          <Smartphone size={20} className="text-emerald-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-800">Xác thực 2 bước (2FA)</h3>
+                          <p className="text-sm text-slate-500">Thêm lớp bảo mật phụ khi đăng nhập</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-800">Xác thực 2 bước (2FA)</h3>
-                        <p className="text-sm text-slate-500">Thêm lớp bảo mật phụ khi đăng nhập</p>
-                      </div>
+                      
+                      {!user?.is2FAEnabled ? (
+                        <button onClick={handleSetup2FA} disabled={loading2FA} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 text-sm font-bold rounded-xl border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all duration-200">
+                          {loading2FA ? "Đang xử lý..." : <><Zap size={14} className="animate-pulse" /> Bật 2FA</>}
+                        </button>
+                      ) : (
+                        <button onClick={handleDisable2FA} className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-200 hover:bg-red-100 transition-all duration-200">
+                          Tắt 2FA
+                        </button>
+                      )}
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 text-sm font-bold rounded-xl border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all duration-200">
-                      <Zap size={14} className="animate-pulse" /> Bật 2FA
-                    </button>
+                    
+                    {setup2FAData && !user?.is2FAEnabled && (
+                      <div className="mt-4 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <p className="text-sm font-bold text-slate-700 mb-4">1. Quét mã QR bằng Google Authenticator hoặc Authy:</p>
+                        <div className="bg-white p-4 inline-block rounded-xl border border-slate-200 mb-4">
+                          <img src={setup2FAData.qrCode} alt="2FA QR Code" className="w-40 h-40" />
+                        </div>
+                        <p className="text-sm text-slate-500 mb-4">
+                          Hoặc nhập khóa bảo mật này thủ công: <code className="bg-slate-200 px-2 py-1 rounded font-mono font-bold text-indigo-600">{setup2FAData.secret}</code>
+                        </p>
+                        <p className="text-sm font-bold text-slate-700 mb-2">2. Nhập mã xác thực gồm 6 chữ số từ ứng dụng:</p>
+                        <div className="flex gap-3 max-w-sm">
+                          <input type="text" placeholder="123456" maxLength={6} value={twoFACode} onChange={e => setTwoFACode(e.target.value)}
+                            className="flex-1 px-4 py-2 bg-white border border-slate-300 rounded-xl text-lg tracking-[0.5em] text-center font-mono font-bold focus:outline-none focus:border-indigo-500" />
+                          <button onClick={handleVerify2FA} disabled={loading2FA || twoFACode.length !== 6}
+                            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50">
+                            Xác nhận
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

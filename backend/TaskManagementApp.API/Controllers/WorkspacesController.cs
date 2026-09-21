@@ -189,4 +189,55 @@ public class WorkspacesController : ControllerBase
 
         return Ok(members);
     }
+    [HttpGet("{id:guid}/workload")]
+    public async Task<IActionResult> GetWorkload(Guid id)
+    {
+        var currentUserId = GetUserId();
+        var hasAccess = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == id && wm.UserId == currentUserId);
+        if (!hasAccess) return Forbid();
+
+        var tasks = await _db.Tasks
+            .Where(t => t.WorkspaceId == id)
+            .ToListAsync();
+
+        var members = await _db.WorkspaceMembers
+            .Include(wm => wm.User)
+            .Where(wm => wm.WorkspaceId == id)
+            .ToListAsync();
+
+        var workload = members.Select(m => {
+            var memberTasks = tasks.Where(t => t.OwnerId == m.UserId).ToList();
+            var totalTasks = memberTasks.Count;
+            var doneTasks = memberTasks.Count(t => t.Status == "Done");
+            var inProgressTasks = memberTasks.Count(t => t.Status == "In Progress");
+            var estimatedHours = memberTasks.Sum(t => t.EstimatedHours ?? 0);
+            
+            return new {
+                m.UserId,
+                Name = m.User.FullName ?? m.User.Email,
+                Email = m.User.Email,
+                TotalTasks = totalTasks,
+                DoneTasks = doneTasks,
+                InProgressTasks = inProgressTasks,
+                EstimatedHours = estimatedHours
+            };
+        }).ToList();
+
+        // Include unassigned tasks
+        var unassignedTasks = tasks.Where(t => t.OwnerId == null || !members.Any(m => m.UserId == t.OwnerId)).ToList();
+        if (unassignedTasks.Any())
+        {
+            workload.Add(new {
+                UserId = Guid.Empty,
+                Name = "Chưa phân công",
+                Email = "",
+                TotalTasks = unassignedTasks.Count,
+                DoneTasks = unassignedTasks.Count(t => t.Status == "Done"),
+                InProgressTasks = unassignedTasks.Count(t => t.Status == "In Progress"),
+                EstimatedHours = unassignedTasks.Sum(t => t.EstimatedHours ?? 0)
+            });
+        }
+
+        return Ok(workload.OrderByDescending(w => w.TotalTasks));
+    }
 }

@@ -118,10 +118,10 @@ public class TasksController : ControllerBase
             try { userId = GetUserId(); } catch { }
             
             var task = await _db.Tasks
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .AsSplitQuery()
-                .Include(t => t.Predecessors).ThenInclude(d => d.PredecessorTask)
-                .Include(t => t.Successors).ThenInclude(d => d.SuccessorTask)
+                .Include(t => t.Predecessors)
+                .Include(t => t.Successors)
                 .Include(t => t.Comments).ThenInclude(c => c.User)
                 .Include(t => t.TimeLogs).ThenInclude(tl => tl.User)
                 .Include(t => t.Attachments)
@@ -129,11 +129,20 @@ public class TasksController : ControllerBase
                 .Include(t => t.Tags)
                 .Include(t => t.Subtasks)
                 .FirstOrDefaultAsync(t => t.TaskId == id);
+                
         if (task == null) return NotFound();
         var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId)
                        || await _db.Workspaces.AnyAsync(w => w.WorkspaceId == task.WorkspaceId && w.OwnerId == userId)
                        || task.OwnerId == userId;
         if (!isMember) return Forbid();
+
+        var relatedTaskIds = (task.Predecessors ?? Enumerable.Empty<TaskDependency>()).Select(p => p.PredecessorTaskId)
+            .Concat((task.Successors ?? Enumerable.Empty<TaskDependency>()).Select(s => s.SuccessorTaskId))
+            .Distinct().ToList();
+            
+        var relatedTitles = await _db.Tasks
+            .Where(t => relatedTaskIds.Contains(t.TaskId))
+            .ToDictionaryAsync(t => t.TaskId, t => t.Title);
 
         return Ok(new {
             task.TaskId,
@@ -157,7 +166,7 @@ public class TasksController : ControllerBase
             Dependencies = (task.Predecessors ?? Enumerable.Empty<TaskDependency>()).Select(d => new {
                 d.TaskDependencyId,
                 d.PredecessorTaskId,
-                PredecessorTitle = d.PredecessorTask != null ? d.PredecessorTask.Title : "N/A",
+                PredecessorTitle = relatedTitles.ContainsKey(d.PredecessorTaskId) ? relatedTitles[d.PredecessorTaskId] : "N/A",
                 d.Type,
                 d.LagDays
             }),
@@ -273,13 +282,20 @@ public class TasksController : ControllerBase
         if (task == null) return NotFound();
         var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId);
         if (!isMember) return Forbid();
-        
+        var oldStatus = task.Status;
         if (dto.Title is not null) task.Title = dto.Title;
         if (dto.Description is not null) task.Description = dto.Description;
         if (dto.StartDate.HasValue) task.StartDate = dto.StartDate.Value;
         if (dto.DueDate.HasValue) task.DueDate = dto.DueDate.Value;
         if (!string.IsNullOrWhiteSpace(dto.Priority)) task.Priority = dto.Priority!;
-        if (!string.IsNullOrWhiteSpace(dto.Status)) task.Status = dto.Status!;
+        
+        bool statusChanged = false;
+        if (!string.IsNullOrWhiteSpace(dto.Status) && task.Status != dto.Status) 
+        {
+            task.Status = dto.Status!;
+            statusChanged = true;
+        }
+
         if (dto.Progress.HasValue) task.Progress = Math.Clamp(dto.Progress.Value, 0, 100);
         if (dto.EstimatedHours.HasValue) task.EstimatedHours = dto.EstimatedHours.Value;
         if (dto.ActualHours.HasValue) task.ActualHours = dto.ActualHours.Value;
@@ -317,7 +333,75 @@ public class TasksController : ControllerBase
             }
         }
 
+        // Check if task was just completed and needs recurrence spawning
+        bool isJustCompleted = dto.Status != null && dto.Status == "Done" && task.Status == "Done" && task.RecurrencePattern != null;
+        // Wait, dto.Status is new status.
+        if (dto.Status != null && dto.Status.Equals("Done", StringComparison.OrdinalIgnoreCase) && 
+            !task.Status.Equals("Done", StringComparison.OrdinalIgnoreCase) && 
+            !string.IsNullOrWhiteSpace(task.RecurrencePattern))
+        {
+            var nextDueDate = CalculateNextRecurrence(task.DueDate ?? DateTime.UtcNow, task.RecurrencePattern, task.RecurrenceInterval);
+            if (task.RecurrenceEndDate == null || nextDueDate <= task.RecurrenceEndDate)
+            {
+                var clonedTask = new TaskManagementApp.Domain.Entities.Task
+                {
+                    TaskId = Guid.NewGuid(),
+                    Title = task.Title,
+                    Description = task.Description,
+                    StartDate = task.StartDate.HasValue ? nextDueDate.Add(task.StartDate.Value - (task.DueDate ?? DateTime.UtcNow)) : null,
+                    DueDate = nextDueDate,
+                    Priority = task.Priority,
+                    Status = "To Do",
+                    Progress = 0,
+                    EstimatedHours = task.EstimatedHours,
+                    IsMilestone = task.IsMilestone,
+                    RecurrencePattern = task.RecurrencePattern,
+                    RecurrenceEndDate = task.RecurrenceEndDate,
+                    RecurrenceInterval = task.RecurrenceInterval,
+                    OwnerId = task.OwnerId,
+                    WorkspaceId = task.WorkspaceId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.Tasks.Add(clonedTask);
+                // Also clone assignments
+                await _db.Entry(task).Collection(t => t.TaskAssignments).LoadAsync();
+                foreach(var assignment in task.TaskAssignments)
+                {
+                    _db.TaskAssignments.Add(new TaskAssignment 
+                    {
+                        TaskAssignmentId = Guid.NewGuid(),
+                        TaskId = clonedTask.TaskId,
+                        UserId = assignment.UserId,
+                        AssignedAt = DateTime.UtcNow
+                    });
+                }
+                // Clear recurrence on the current completed task so it doesn't spawn again if re-completed
+                task.RecurrencePattern = null; 
+            }
+        }
+        
+        await _db.SaveChangesAsync(); // save again for the clone
+
         await _taskHub.Clients.Group($"workspace:{task.WorkspaceId}").SendAsync("TaskUpdated", task);
+
+        if (statusChanged)
+        {
+            var emailService = HttpContext.RequestServices.GetService(typeof(IEmailService)) as IEmailService;
+            if (emailService != null)
+            {
+                await _db.Entry(task).Collection(t => t.TaskAssignments).Query().Include(a => a.User).LoadAsync();
+                var frontendUrl = _db.Workspaces.Any(w => w.WorkspaceId == task.WorkspaceId) ? $"http://localhost:3000/workspaces/{task.WorkspaceId}?tab=board" : "http://localhost:3000/tasks";
+                foreach (var assignment in task.TaskAssignments)
+                {
+                    if (assignment.User != null && !string.IsNullOrEmpty(assignment.User.Email))
+                    {
+                        var htmlBody = EmailTemplateBuilder.BuildTaskStatusChangedTemplate(assignment.User.FullName ?? assignment.User.Email, task.Title, oldStatus, task.Status, frontendUrl);
+                        _ = emailService.SendAsync(assignment.User.Email, $"Cập nhật trạng thái: {task.Title}", htmlBody);
+                    }
+                }
+            }
+        }
+
         return Ok(task);
     }
 
@@ -363,5 +447,96 @@ public class TasksController : ControllerBase
             .ToListAsync();
 
         return Ok(tasks);
+    }
+
+    private DateTime CalculateNextRecurrence(DateTime currentDueDate, string pattern, int interval)
+    {
+        return pattern.ToLower() switch
+        {
+            "daily" => currentDueDate.AddDays(interval),
+            "weekly" => currentDueDate.AddDays(7 * interval),
+            "monthly" => currentDueDate.AddMonths(interval),
+            "yearly" => currentDueDate.AddYears(interval),
+            _ => currentDueDate.AddDays(interval) // fallback to daily
+        };
+    }
+
+    // ─── Task Approval Workflow ───
+    
+    public record RequestApprovalDto(Guid ApproverId);
+    
+    [HttpPost("{id:guid}/approvals")]
+    public async Task<IActionResult> RequestApproval(Guid id, [FromBody] RequestApprovalDto dto)
+    {
+        var userId = GetUserId();
+        var task = await _db.Tasks.FindAsync(id);
+        if (task == null) return NotFound();
+
+        var isMember = await _db.WorkspaceMembers.AnyAsync(wm => wm.WorkspaceId == task.WorkspaceId && wm.UserId == userId);
+        if (!isMember) return Forbid();
+
+        var approval = new TaskApproval
+        {
+            TaskApprovalId = Guid.NewGuid(),
+            TaskId = id,
+            ApproverId = dto.ApproverId,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.TaskApprovals.Add(approval);
+        
+        // Log activity
+        _db.ActivityLogs.Add(new ActivityLog
+        {
+            LogId = Guid.NewGuid(),
+            UserId = userId,
+            Action = $"Yêu cầu {dto.ApproverId} duyệt công việc: {task.Title}",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+        
+        var approver = await _db.Users.FindAsync(dto.ApproverId);
+        if (approver != null)
+        {
+            var emailService = HttpContext.RequestServices.GetService(typeof(IEmailService)) as IEmailService;
+            if (emailService != null)
+            {
+                var frontendUrl = $"http://localhost:3000/workspaces/{task.WorkspaceId}?tab=board";
+                var htmlBody = EmailTemplateBuilder.BuildTaskStatusChangedTemplate(approver.FullName ?? approver.Email, task.Title, "Yêu cầu", "Chờ duyệt", frontendUrl);
+                _ = emailService.SendAsync(approver.Email, $"Yêu cầu duyệt công việc: {task.Title}", htmlBody);
+            }
+        }
+
+        return Ok(approval);
+    }
+
+    public record RespondApprovalDto(string Status, string? Comments);
+
+    [HttpPut("{id:guid}/approvals/{approvalId:guid}")]
+    public async Task<IActionResult> RespondApproval(Guid id, Guid approvalId, [FromBody] RespondApprovalDto dto)
+    {
+        var userId = GetUserId();
+        var approval = await _db.TaskApprovals.Include(a => a.Task).FirstOrDefaultAsync(a => a.TaskApprovalId == approvalId && a.TaskId == id);
+        
+        if (approval == null) return NotFound();
+        if (approval.ApproverId != userId) return Forbid(); // Only assigned approver can respond
+        if (dto.Status != "Approved" && dto.Status != "Rejected") return BadRequest("Invalid status");
+
+        approval.Status = dto.Status;
+        approval.Comments = dto.Comments;
+        approval.RespondedAt = DateTime.UtcNow;
+
+        _db.ActivityLogs.Add(new ActivityLog
+        {
+            LogId = Guid.NewGuid(),
+            UserId = userId,
+            Action = $"Đã {dto.Status} công việc: {approval.Task?.Title}",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+        return Ok(approval);
     }
 }

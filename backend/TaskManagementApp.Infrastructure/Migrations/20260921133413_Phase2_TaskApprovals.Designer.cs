@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagementApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TaskManagementApp.Infrastructure.Data;
 namespace TaskManagementApp.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskManagementAppContext))]
-    partial class TaskManagementAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260921133413_Phase2_TaskApprovals")]
+    partial class Phase2_TaskApprovals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -969,9 +972,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("Is2FAEnabled")
-                        .HasColumnType("bit");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -983,9 +983,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasDefaultValue("User");
-
-                    b.Property<string>("TwoFactorSecret")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");

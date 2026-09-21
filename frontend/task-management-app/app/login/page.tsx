@@ -23,16 +23,40 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState("");
+  const [twoFACode, setTwoFACode] = useState("");
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
       const res = await api.post("/Auth/login", { email, password });
+      if (res.data.requires2FA) {
+        setRequires2FA(true);
+        setTempToken(res.data.tempToken);
+      } else {
+        localStorage.setItem("token", res.data.token);
+        router.push("/");
+      }
+    } catch (err: any) {
+      setError(err.response?.data || "Email hoặc mật khẩu không đúng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handle2FASubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const res = await api.post("/Auth/login-2fa", { tempToken, code: twoFACode });
       localStorage.setItem("token", res.data.token);
       router.push("/");
     } catch (err: any) {
-      setError(err.response?.data || "Email hoặc mật khẩu không đúng");
+      setError(err.response?.data || "Mã xác thực không hợp lệ");
     } finally {
       setLoading(false);
     }
@@ -89,37 +113,60 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 6 }}>Email</label>
-            <div style={{ position: "relative" }}>
-              <Mail size={15} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="gp-input" style={{ paddingLeft: 32 }} placeholder="name@company.com" />
+        {!requires2FA ? (
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 6 }}>Email</label>
+              <div style={{ position: "relative" }}>
+                <Mail size={15} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="gp-input" style={{ paddingLeft: 32 }} placeholder="name@company.com" />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84" }}>Mật khẩu</label>
-              <a href="#" style={{ fontSize: 12, color: "#0052cc", textDecoration: "none", fontWeight: 500 }}>Quên mật khẩu?</a>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84" }}>Mật khẩu</label>
+                <a href="#" style={{ fontSize: 12, color: "#0052cc", textDecoration: "none", fontWeight: 500 }}>Quên mật khẩu?</a>
+              </div>
+              <div style={{ position: "relative" }}>
+                <Lock size={15} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
+                  className="gp-input" style={{ paddingLeft: 32, paddingRight: 36 }} placeholder="••••••••" />
+                <button type="button" onClick={() => setShowPwd(v => !v)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#97a0af", padding: 0 }}>
+                  {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
             </div>
-            <div style={{ position: "relative" }}>
-              <Lock size={15} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
-              <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
-                className="gp-input" style={{ paddingLeft: 32, paddingRight: 36 }} placeholder="••••••••" />
-              <button type="button" onClick={() => setShowPwd(v => !v)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#97a0af", padding: 0 }}>
-                {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
-          </div>
 
-          <button type="submit" disabled={loading}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", background: loading ? "#80a8e0" : "#0052cc", color: "#fff", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginTop: 4, transition: "background 0.15s" }}>
-            {loading ? "Đang xử lý..." : <>Đăng nhập <ArrowRight size={16} /></>}
-          </button>
-        </form>
+            <button type="submit" disabled={loading}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", background: loading ? "#80a8e0" : "#0052cc", color: "#fff", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginTop: 4, transition: "background 0.15s" }}>
+              {loading ? "Đang xử lý..." : <>Đăng nhập <ArrowRight size={16} /></>}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handle2FASubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <p style={{ fontSize: 13, color: "#5e6c84", marginBottom: 10 }}>Vui lòng nhập mã gồm 6 chữ số từ ứng dụng Authenticator của bạn.</p>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#5e6c84", display: "block", marginBottom: 6 }}>Mã xác thực</label>
+              <div style={{ position: "relative" }}>
+                <Lock size={15} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#97a0af" }} />
+                <input type="text" required value={twoFACode} onChange={e => setTwoFACode(e.target.value)} maxLength={6}
+                  className="gp-input" style={{ paddingLeft: 32, letterSpacing: "0.2em", fontWeight: "bold" }} placeholder="123456" />
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading || twoFACode.length !== 6}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", background: loading ? "#80a8e0" : "#0052cc", color: "#fff", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginTop: 4, transition: "background 0.15s" }}>
+              {loading ? "Đang xử lý..." : "Xác nhận"}
+            </button>
+            <button type="button" onClick={() => { setRequires2FA(false); setTempToken(""); }}
+              style={{ padding: "10px 16px", background: "none", color: "#5e6c84", border: "1px solid #dfe1e6", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 4 }}>
+              Quay lại
+            </button>
+          </form>
+        )}
 
         <p style={{ marginTop: 24, fontSize: 13, color: "#5e6c84", textAlign: "center" }}>
           Chưa có tài khoản?{" "}

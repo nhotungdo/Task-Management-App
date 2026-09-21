@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagementApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using TaskManagementApp.Infrastructure.Data;
 namespace TaskManagementApp.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskManagementAppContext))]
-    partial class TaskManagementAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260921132942_Phase2_Goals")]
+    partial class Phase2_Goals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -607,47 +610,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("TaskManagementApp.Domain.Entities.TaskApproval", b =>
-                {
-                    b.Property<Guid>("TaskApprovalId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("(newid())");
-
-                    b.Property<Guid>("ApproverId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comments")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<DateTime?>("RespondedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("Pending");
-
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("TaskApprovalId");
-
-                    b.HasIndex("ApproverId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskApprovals");
-                });
-
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.TaskAssignment", b =>
                 {
                     b.Property<Guid>("TaskAssignmentId")
@@ -969,9 +931,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("Is2FAEnabled")
-                        .HasColumnType("bit");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -983,9 +942,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasDefaultValue("User");
-
-                    b.Property<string>("TwoFactorSecret")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");
@@ -1343,25 +1299,6 @@ namespace TaskManagementApp.Infrastructure.Migrations
                     b.Navigation("Owner");
 
                     b.Navigation("Workspace");
-                });
-
-            modelBuilder.Entity("TaskManagementApp.Domain.Entities.TaskApproval", b =>
-                {
-                    b.HasOne("TaskManagementApp.Domain.Entities.User", "Approver")
-                        .WithMany()
-                        .HasForeignKey("ApproverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TaskManagementApp.Domain.Entities.Task", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Approver");
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("TaskManagementApp.Domain.Entities.TaskAssignment", b =>
